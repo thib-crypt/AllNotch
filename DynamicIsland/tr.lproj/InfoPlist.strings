@@ -1,0 +1,14 @@
+"CFBundleDisplayName" = "AllNotch";
+"NSAppleEventsUsageDescription" = "AllNotch, Spotify ve Apple Music'i kontrol etmek için AppleScript kullanır.";
+"NSBluetoothAlwaysUsageDescription" = "AllNotch, ses aygıtları bağlandığında bunları algılamak ve HUD'da pil durumlarını göstermek için Bluetooth erişimine ihtiyaç duyar.";
+"NSCalendarsFullAccessUsageDescription" = "Takvim etkinliklerini çentik içinde gösterir.";
+"NSCalendarsUsageDescription" = "Takvim modu için gereklidir.";
+"NSCameraUsageDescription" = "Ayna modu için kameranıza ihtiyaç duyuyoruz.";
+"NSDesktopFolderUsageDescription" = "AllNotch, ekran görüntülerini masaüstünüze kaydetmek için erişime ihtiyaç duyar.";
+"NSDocumentsFolderUsageDescription" = "AllNotch, rafa sürüklenen dosyaları kaydetmek ve okumak için erişime ihtiyaç duyar.";
+"NSDownloadsFolderUsageDescription" = "AllNotch, İndirilenler klasöründeki dosyaları okumak için erişime ihtiyaç duyar.";
+"NSLocationUsageDescription" = "AllNotch, doğru kilit ekranı hava durumunu göstermek için konumunuzu kullanır.";
+"NSLocationWhenInUseUsageDescription" = "AllNotch, doğru kilit ekranı hava durumunu göstermek için konumunuzu kullanır.";
+"NSRemindersUsageDescription" = "AllNotch, anımsatıcılarınızı göstermek için Anımsatıcılar erişimine ihtiyaç duyar.";
+"NSAudioCaptureUsageDescription" = "AllNotch, gerçek zamanlı müzik dalga biçimi görselleştiricisini göstermek için ses yakalama iznine ihtiyaç duyar.";
+"NSScreenCaptureUsageDescription" = "AllNotch, yapay zeka asistanı özelliği için ekran görüntüleri yakalamak üzere ekran kaydı iznine ihtiyaç duyar.";
