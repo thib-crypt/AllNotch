@@ -511,6 +511,7 @@ struct SettingsView: View {
             // Developer
             .stats,
             .terminal,
+            .agents,
             // Integrations
             .extensions,
             // Info
@@ -934,7 +935,7 @@ struct SettingsView: View {
 
     private func isTabVisible(_ tab: SettingsTab) -> Bool {
         switch tab {
-        case .timer, .stats, .clipboard, .screenAssistant, .colorPicker, .shelf, .notes, .terminal:
+        case .timer, .stats, .clipboard, .screenAssistant, .colorPicker, .shelf, .notes, .terminal, .agents:
             return !enableMinimalisticUI
         default:
             return true
