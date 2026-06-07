@@ -27,13 +27,13 @@
 
 ## 2. Prérequis de développement
 
-| Outil | Version minimale | Notes |
-|-------|-----------------|-------|
-| macOS | 14.0+ | optimisé pour macOS 15+ |
-| Xcode | 15+ | nécessaire pour le target app |
-| Swift | 6.2 | requis par Open Island |
-| Node.js | 18+ | uniquement pour `create-dmg` (packaging) |
-| Homebrew | récent | pour `create-dmg` et la distribution cask |
+| Outil    | Version minimale | Notes                                     |
+| ----------| ------------------| -------------------------------------------|
+| macOS    | 14.0+            | optimisé pour macOS 15+                   |
+| Xcode    | 15+              | nécessaire pour le target app             |
+| Swift    | 6.2              | requis par Open Island                    |
+| Node.js  | 18+              | uniquement pour `create-dmg` (packaging)  |
+| Homebrew | récent           | pour `create-dmg` et la distribution cask |
 
 MacBook avec notch recommandé pour le développement (MBP 14/16 pouces Apple Silicon).
 
@@ -232,6 +232,8 @@ Copie directe depuis Atoll :
 Ajouter `MediaBridge/NowPlayingProvider.swift` comme wrapper observable (`@Observable` Swift 5.9+).
 
 ### Phase 3 — Onglet Agents (4-5 jours)
+
+> **État (tranche 1 — Claude Code, livrée)** : OpenIslandCore intégré comme package SPM local (`Packages/AgentBridge`, module interne `OpenIslandCore` préservé) ; produits `AgentHooks`/`AgentSetup`. Chemins runtime débrandés (`~/Library/Application Support/AllNotch`, socket `/tmp/allnotch-<uid>.sock`, binaire `AllNotchHooks`). Onglet **Agents** câblé (`NotchViews.agents` + `TabModel`, flag `enableAgentsFeature`) via `AgentBridgeController` (BridgeServer + LocalBridgeClient observer → `SessionState` observable). Jump-back porté (`TerminalJumpService`). Binaire `AgentHooks` embarqué dans `AllNotch.app/Contents/Helpers/`. Install des hooks Claude depuis l'onglet. Build app + package verts. **Reste** : autres agents (Codex/Cursor/Gemini/…), enrichissement UI (markdown, phases détaillées), discovery/monitoring de process, section Settings dédiée.
 
 Reprendre depuis Open Island :
 

@@ -533,6 +533,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         LockScreenManager.shared.configure(viewModel: vm)
         extensionXPCServiceHost.start()
         extensionRPCServer.start()
+
+        // Start the agent bridge (Open Island) so hook events are captured
+        // from launch, independent of whether the Agents tab is open.
+        if Defaults[.enableAgentsFeature] {
+            AgentBridgeController.shared.startIfNeeded()
+        }
         
         // Migrate legacy progress bar settings
         Defaults.Keys.migrateProgressBarStyle()

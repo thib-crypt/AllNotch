@@ -1034,6 +1034,17 @@ extension Defaults.Keys {
     static let showBluetoothDeviceNameMarquee = Key<Bool>("showBluetoothDeviceNameMarquee", default: false)
     static let useBluetoothHUD3DIcon = Key<Bool>("useBluetoothHUD3DIcon", default: true)
     
+    // MARK: Agents Feature (Open Island bridge)
+    static let enableAgentsFeature = Key<Bool>("enableAgentsFeature", default: true)
+    /// Surface a sneak-peek and (optionally) open the notch when an agent needs attention.
+    static let agentNotificationsEnabled = Key<Bool>("agentNotificationsEnabled", default: true)
+    /// Play a system sound when an agent session needs approval or an answer.
+    static let agentSoundsEnabled = Key<Bool>("agentSoundsEnabled", default: true)
+    /// Name of the macOS system sound played on agent attention events.
+    static let agentSoundName = Key<String>("agentSoundName", default: "Submarine")
+    /// Automatically open the notch to the Agents tab when attention is needed.
+    static let agentAutoOpenNotch = Key<Bool>("agentAutoOpenNotch", default: false)
+
     // MARK: Stats Feature
     static let enableStatsFeature = Key<Bool>("enableStatsFeature", default: false)
     static let autoStartStatsMonitoring = Key<Bool>("autoStartStatsMonitoring", default: true)
