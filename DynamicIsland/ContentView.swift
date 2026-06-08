@@ -55,6 +55,7 @@ struct ContentView: View {
     @ObservedObject var localSendService = LocalSendService.shared
     @State private var downloadManager = DownloadManager.shared
     @ObservedObject var shelfState = ShelfStateViewModel.shared
+    @ObservedObject var agentBridge = AgentBridgeController.shared
     
     @Default(.enableStatsFeature) var enableStatsFeature
     @Default(.showCpuGraph) var showCpuGraph
@@ -146,7 +147,15 @@ struct ContentView: View {
         if coordinator.currentView == .timer {
             return CGSize(width: baseSize.width, height: 250) // Extra height for timer presets
         }
-        
+
+        // Plugin-provided tabs may declare a preferred open-notch height
+        // (e.g. Todo's comfortable list height, Agents' tall session panel).
+        if case let .plugin(id) = coordinator.currentView,
+           let plugin = PluginHost.shared.tabPlugin(for: id),
+           let preferredHeight = plugin.preferredNotchHeight(for: baseSize) {
+            return CGSize(width: baseSize.width, height: preferredHeight)
+        }
+
         if coordinator.currentView == .notes || coordinator.currentView == .clipboard {
             let preferredHeight = coordinator.notesLayoutState.preferredHeight
             let resolvedHeight = max(baseSize.height, preferredHeight)
@@ -411,6 +420,17 @@ struct ContentView: View {
         return false
     }
 
+    /// Whether the closed-notch agents grid ("space invaders") should be shown.
+    /// Only while the Agents feature is on and at least one session is waiting
+    /// on the user (permission or question) — otherwise the closed notch is
+    /// left untouched.
+    private var agentAttentionLiveActivityActive: Bool {
+        Defaults[.enableAgentsFeature]
+            && vm.notchState == .closed
+            && !vm.hideOnClosed
+            && agentBridge.closedNotchAgentCells != nil
+    }
+
     /// Pill shape for Dynamic Island mode with animated corner radius transitions.
     private var currentPillShape: DynamicIslandPillShape {
         let radius: CGFloat
@@ -666,7 +686,7 @@ struct ContentView: View {
                 // An agent needs attention and the user opted into auto-opening
                 // the notch on the Agents tab.
                 guard Defaults[.enableAgentsFeature] else { return }
-                coordinator.currentView = .agents
+                coordinator.currentView = .plugin(.agents)
                 if vm.notchState == .closed {
                     openNotch()
                 }
@@ -934,6 +954,9 @@ struct ContentView: View {
                       } else if vm.notchState == .closed && capsLockManager.isCapsLockActive && Defaults[.enableCapsLockIndicator] && !vm.hideOnClosed && !lockScreenManager.isLocked {
                           InlineHUD(type: .constant(.capsLock), value: .constant(1.0), icon: .constant(""), hoverAnimation: $isHovering, gestureProgress: $gestureProgress)
                               .transition(AnyTransition.move(edge: .trailing).combined(with: .opacity))
+                      } else if !isCurrentScreenExpansionVisible && agentAttentionLiveActivityActive {
+                          AgentAttentionLiveActivity()
+                              .transition(.opacity.combined(with: .move(edge: .bottom)))
                       } else if canShowMusicDuringExpansion && musicPairingEligible {
                           MusicLiveActivity(secondary: musicSecondary)
                               .id("closed-music-live-activity")
@@ -1107,19 +1130,21 @@ struct ContentView: View {
                                   NotchTimerView()
                               case .stats:
                                   NotchStatsView()
-                              case .colorPicker:
-                                  NotchColorPickerView()
                             case .notes:
                                 NotchNotesView()
                             case .clipboard:
                                 NotchNotesView()
                             case .terminal:
                                 NotchTerminalView()
-                            case .agents:
-                                AgentsTabView()
                             case .extensionExperience:
                                 if let payload = currentExtensionTabPayload() {
                                     ExtensionNotchExperienceTabView(payload: payload)
+                                } else {
+                                    NotchHomeView(albumArtNamespace: albumArtNamespace)
+                                }
+                            case .plugin(let id):
+                                if let plugin = PluginHost.shared.tabPlugin(for: id) {
+                                    plugin.makeTabView()
                                 } else {
                                     NotchHomeView(albumArtNamespace: albumArtNamespace)
                                 }

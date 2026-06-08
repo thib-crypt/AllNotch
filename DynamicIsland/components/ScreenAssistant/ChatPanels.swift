@@ -666,16 +666,16 @@ struct ScreenshotButton: View {
     }
     
     private func startScreenshot(type: ScreenshotSnippingTool.ScreenshotType) {
-        // Start snipping with direct callback (ScreenshotApp-based approach)
-        screenshotTool.startSnipping(type: type) { [weak screenAssistantManager] screenshotURL in
+        // Utiliser MacshotManager pour une capture d'écran riche et annotable
+        MacshotManager.shared.startCapture(type: type) { [weak screenAssistantManager] screenshotURL in
             guard let manager = screenAssistantManager else {
-                print("❌ ScreenshotTool: ScreenAssistantManager deallocated during callback")
+                print("❌ MacshotManager: ScreenAssistantManager deallocated during callback")
                 return
             }
             
-            print("📁 ScreenshotTool: Adding \(type.displayName.lowercased()) screenshot to chat: \(screenshotURL.lastPathComponent)")
+            print("📁 MacshotManager: Adding \(type.displayName.lowercased()) screenshot to chat: \(screenshotURL.lastPathComponent)")
             manager.addFiles([screenshotURL])
-            print("📸 \(type.displayName) screenshot captured and added to chat successfully")
+            print("📸 \(type.displayName) screenshot captured, annotated, and added to chat successfully")
         }
     }
 }

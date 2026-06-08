@@ -32,14 +32,17 @@ struct TabModel: Identifiable {
     let view: NotchViews
     let experienceID: String?
     let accentColor: Color?
+    /// Optional pending/unread count rendered as a small badge (e.g. Todo).
+    let badge: Int?
 
-    init(label: String, icon: String, view: NotchViews, experienceID: String? = nil, accentColor: Color? = nil) {
+    init(label: String, icon: String, view: NotchViews, experienceID: String? = nil, accentColor: Color? = nil, badge: Int? = nil) {
         self.id = experienceID.map { "extension-\($0)" } ?? "system-\(view)-\(label)"
         self.label = label
         self.icon = icon
         self.view = view
         self.experienceID = experienceID
         self.accentColor = accentColor
+        self.badge = badge
     }
 }
 
@@ -50,6 +53,11 @@ struct TabSelectionView: View {
     @Default(.quickShareProvider) private var quickShareProvider
     @State private var showQuickSharePopover = false
     @Default(.enableTimerFeature) var enableTimerFeature
+    // Observed purely so the tab bar re-renders when Todo's badge inputs change.
+    // The badge value itself is computed by `TodoPlugin.tabBadgeCount`; this view
+    // stays feature-agnostic and only needs the change signal.
+    @Default(.todoShowBadge) private var todoShowBadgeTrigger
+    @Default(.todoTasks) private var todoTasksTrigger
     @Default(.enableStatsFeature) var enableStatsFeature
     @Default(.enableColorPickerFeature) var enableColorPickerFeature
     @Default(.timerDisplayMode) var timerDisplayMode
@@ -90,8 +98,19 @@ struct TabSelectionView: View {
         if Defaults[.enableTerminalFeature] {
             tabsArray.append(TabModel(label: "Terminal", icon: "apple.terminal", view: .terminal))
         }
-        if Defaults[.enableAgentsFeature] {
-            tabsArray.append(TabModel(label: "Agents", icon: "cpu", view: .agents))
+        // Plugin-provided notch tabs (enabled + NotchTabProviding), in registry
+        // order. Covers migrated features such as Todo and Agents.
+        for plugin in PluginHost.shared.tabPlugins {
+            let descriptor = plugin.tab
+            tabsArray.append(
+                TabModel(
+                    label: descriptor.label,
+                    icon: descriptor.icon,
+                    view: .plugin(plugin.id),
+                    accentColor: descriptor.accentColor,
+                    badge: plugin.tabBadgeCount
+                )
+            )
         }
         if extensionTabsEnabled {
             for payload in extensionTabPayloads {
@@ -139,8 +158,18 @@ struct TabSelectionView: View {
                             .hidden()
                     }
                 }
-
-                
+                .overlay(alignment: .topTrailing) {
+                    if let badge = tab.badge, badge > 0 {
+                        Text("\(badge)")
+                            .font(.system(size: 9, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 4)
+                            .frame(minWidth: 14, minHeight: 14)
+                            .background(Capsule().fill(Color.red))
+                            .offset(x: 8, y: -4)
+                            .transition(.scale.combined(with: .opacity))
+                    }
+                }
             }
         }
         .animation(.smooth(duration: 0.3), value: coordinator.currentView)

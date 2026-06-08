@@ -32,7 +32,7 @@ class StatusBarMenu: NSMenu {
     }
     
     convenience init() {
-        self.init(title: "DynamicIsland")
+        self.init(title: "AllNotch")
     }
     
     required init(coder: NSCoder) {

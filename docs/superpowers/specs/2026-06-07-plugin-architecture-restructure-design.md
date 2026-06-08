@@ -1,7 +1,7 @@
 # AllNotch — Restructuration vers une architecture « plugin »
 
 **Date** : 2026-06-07
-**Statut** : Design validé (brainstorming) — en attente de relecture utilisateur avant plan d'implémentation
+**Statut** : Pilote implémenté (2026-06-07) — `Plugins/Core` + `ScreenshotPlugin` ; build vert, app démarre. Migration des autres features (§6) à suivre.
 **Auteur** : Claude + Thibault
 
 ---

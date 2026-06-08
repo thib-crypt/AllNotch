@@ -36,7 +36,7 @@ struct ProOnboard: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 100, height: 100)
                         .padding(.bottom, 8)
-                    Text("TheDynamicIsland")
+                    Text("AllNotch")
                         .font(.system(.largeTitle, design: .serif))
                     Text("Welcome")
                         .font(.title)
@@ -58,9 +58,7 @@ struct ProOnboard: View {
                             .padding(.bottom, 30)
                     }
                     Button {
-                        if let url = URL(string: "https://www.linkedin.com/in/hariharan-mudaliar/") {
-                            NSWorkspace.shared.open(url)
-                        }
+                        NSWorkspace.shared.open(sponsorPage)
                     } label: {
                         Label("Buy us a coffee", systemImage: "cup.and.saucer.fill")
                             .font(.headline)
@@ -85,14 +83,6 @@ struct ProOnboard: View {
                 .padding(.top)
             }
             
-            Image("dynamicisland")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(height: 22)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                .padding()
-                .padding(.bottom, 36)
-                .blendMode(.overlay)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .ignoresSafeArea()

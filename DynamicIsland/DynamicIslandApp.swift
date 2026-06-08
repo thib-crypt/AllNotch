@@ -446,8 +446,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let screenHeight = NSScreen.main?.visibleFrame.height ?? 800
             let maxFraction = Defaults[.terminalMaxHeightFraction]
             baseSize.height = min(screenHeight * maxFraction, max(300, screenHeight * maxFraction))
+        } else if case let .plugin(id) = coordinator.currentView,
+                  let plugin = PluginHost.shared.tabPlugin(for: id),
+                  let preferred = plugin.preferredNotchHeight(for: baseSize) {
+            // Plugin-provided tabs (e.g. Agents) may declare a preferred open-notch
+            // height — honor it here so the real window matches the SwiftUI frame.
+            baseSize.height = preferred
         }
-        
+
         let adjustedContentSize = statsAdjustedNotchSize(
             from: baseSize,
             isStatsTabActive: coordinator.currentView == .stats,
@@ -534,12 +540,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         extensionXPCServiceHost.start()
         extensionRPCServer.start()
 
-        // Start the agent bridge (Open Island) so hook events are captured
-        // from launch, independent of whether the Agents tab is open.
-        if Defaults[.enableAgentsFeature] {
-            AgentBridgeController.shared.startIfNeeded()
-        }
-        
+        // Bootstrap the plugin host: activates enabled lifecycle plugins and
+        // starts observing their enable toggles. This is what starts the agent
+        // bridge (Open Island) from launch — `AgentsPlugin.activate()` calls
+        // `AgentBridgeController.startIfNeeded()` — so hook events are captured
+        // independent of whether the Agents tab is open. Screenshot likewise
+        // warms its macshot capture path here.
+        PluginHost.shared.bootstrap()
+
         // Migrate legacy progress bar settings
         Defaults.Keys.migrateProgressBarStyle()
         Defaults.Keys.migrateMusicAuxControls()
@@ -1126,6 +1134,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+        
+        KeyboardShortcuts.onKeyDown(for: .captureArea) {
+            guard Defaults[.enableShortcuts] else { return }
+            MacshotManager.shared.startCapture(type: .area)
+        }
+        
+        KeyboardShortcuts.onKeyDown(for: .captureFullScreen) {
+            guard Defaults[.enableShortcuts] else { return }
+            MacshotManager.shared.startCapture(type: .full)
+        }
+        
+        KeyboardShortcuts.onKeyDown(for: .captureOCR) {
+            guard Defaults[.enableShortcuts] else { return }
+            MacshotManager.shared.startOCR()
+        }
     }
 
     @MainActor
@@ -1135,6 +1158,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateShortcut(.colorPickerPanel, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableColorPickerFeature])
         updateShortcut(.screenAssistantPanel, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableScreenAssistant])
         updateShortcut(.toggleTerminalTab, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableTerminalFeature])
+        updateShortcut(.captureArea, isEnabled: Defaults[.enableShortcuts])
+        updateShortcut(.captureFullScreen, isEnabled: Defaults[.enableShortcuts])
+        updateShortcut(.captureOCR, isEnabled: Defaults[.enableShortcuts])
     }
 
     @MainActor

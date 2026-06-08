@@ -38,6 +38,9 @@ enum SneakContentType: Equatable {
     case capsLock
     case agentAttention
     case extensionLiveActivity(bundleID: String, activityID: String)
+    /// Generic notch-closed contribution from a feature-plugin. `token`
+    /// distinguishes different sneak kinds emitted by the same plugin.
+    case plugin(id: PluginID, token: String)
 }
 
 extension SneakContentType {
@@ -62,6 +65,8 @@ extension SneakContentType {
             return true
         case let (.extensionLiveActivity(lb, la), .extensionLiveActivity(rb, ra)):
             return lb == rb && la == ra
+        case let (.plugin(li, lt), .plugin(ri, rt)):
+            return li == ri && lt == rt
         default:
             return false
         }
@@ -107,7 +112,19 @@ class DynamicIslandViewCoordinator: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var hoverOpenSuppressedUntil: Date = .distantPast
     
-    private static let tabOrder: [NotchViews] = [.home, .shelf, .timer, .stats, .colorPicker, .notes, .clipboard, .terminal, .extensionExperience]
+    private static let tabOrder: [NotchViews] = [.home, .shelf, .timer, .stats, .notes, .clipboard, .terminal, .extensionExperience]
+
+    /// Unified ordering for both legacy tabs and plugin tabs. Plugin tabs are
+    /// ordered after the legacy tabs, following the `PluginHost` registry order.
+    private static func orderIndex(of view: NotchViews) -> Int {
+        if let index = tabOrder.firstIndex(of: view) {
+            return index
+        }
+        if case let .plugin(id) = view, let pluginIndex = PluginHost.shared.tabIndex(of: id) {
+            return tabOrder.count + pluginIndex
+        }
+        return 0
+    }
     
     /// Direction of the most recent tab switch (true = forward/right, false = backward/left)
     @Published var tabSwitchForward: Bool = true
@@ -119,8 +136,8 @@ class DynamicIslandViewCoordinator: ObservableObject {
                 return
             }
             // Track direction before SwiftUI re-renders
-            let oldIdx = Self.tabOrder.firstIndex(of: oldValue) ?? 0
-            let newIdx = Self.tabOrder.firstIndex(of: currentView) ?? 0
+            let oldIdx = Self.orderIndex(of: oldValue)
+            let newIdx = Self.orderIndex(of: currentView)
             tabSwitchForward = newIdx >= oldIdx
             handleStatsTabTransition(from: oldValue, to: currentView)
         }
@@ -238,6 +255,7 @@ class DynamicIslandViewCoordinator: ObservableObject {
             Defaults.publisher(.enableClipboardManager).map { _ in () }.eraseToAnyPublisher(),
             Defaults.publisher(.clipboardDisplayMode).map { _ in () }.eraseToAnyPublisher(),
             Defaults.publisher(.enableTerminalFeature).map { _ in () }.eraseToAnyPublisher(),
+            Defaults.publisher(.enableTodoFeature).map { _ in () }.eraseToAnyPublisher(),
             Defaults.publisher(.enableMinimalisticUI).map { _ in () }.eraseToAnyPublisher()
         )
         .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)

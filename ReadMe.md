@@ -5,37 +5,36 @@
 <h1 align="center">AllNotch</h1>
 
 <p align="center">
-  Your MacBook notch, elevated.
-</p>
-
-<p align="center">
   <img src="https://img.shields.io/badge/macOS-14.6%2B-blue?logo=apple&logoColor=white" alt="macOS 14.6+">
   <img src="https://img.shields.io/badge/Swift-5.9-FA7343?logo=swift&logoColor=white" alt="Swift 5.9">
   <img src="https://img.shields.io/badge/License-GPL%20v3-green" alt="GPL v3">
   <img src="https://img.shields.io/badge/version-0.1%20Notch%20Zero-lightgrey" alt="v0.1 Notch Zero">
 </p>
 
----
-
-**AllNotch** is a native macOS app that turns the MacBook notch into an all-in-one control surface — media controls, system stats, live AI agent sessions, and token-usage / cost tracking, without juggling several separate apps.
-
-> **v0.1 "Notch Zero"** — Early release. The full notch UI/UX shell is functional. The Agents and Usage tabs are actively being built.
+<p align="center">Your MacBook notch, elevated.</p>
 
 ---
 
-## Features
+**AllNotch** turns the MacBook notch into a single, native control surface for your whole Mac.
 
-| Feature | Status |
-|---------|--------|
-| 🎵 Now Playing — Apple Music, Spotify, Amazon Music | ✅ Ready |
-| 🔋 Battery & system stats HUD | ✅ Ready |
-| 📋 Clipboard shelf | ✅ Ready |
-| ⏱ Timers & lock-screen widgets | ✅ Ready |
-| 🗓 Calendar & weather on lock screen | ✅ Ready |
-| 🎨 Idle animations & custom notch styles | ✅ Ready |
-| 🤖 Live AI agent sessions (Claude, Codex, Cursor, Gemini…) | 🚧 In progress |
-| 💰 Token usage & cost tracking | 🚧 In progress |
-| 🧩 Plugin architecture | 🚧 In progress |
+The goal is simple: instead of running a dozen separate menu-bar utilities — one for media controls, one for system stats, one for a clipboard manager, one for timers, one for a drop shelf, one for your AI coding agents — **AllNotch unifies all of those into one app that lives in the notch.** Hover or click the notch and everything is there, contextual and out of the way the rest of the time.
+
+It runs as a lightweight menu-bar agent (no Dock icon), expands the notch into a tabbed surface on demand, and surfaces glanceable "sneak peeks" (volume, music, battery, agent attention…) when the notch is closed.
+
+> **v0.1 "Notch Zero"** — Active development. The full notch UI/UX shell and the Agents tab are working today. The Usage / Cost dashboard is being grafted on next.
+
+---
+
+## What it does
+
+- **Media** — Now-playing controls, artwork, and a live audio visualizer for Apple Music, Spotify, YouTube Music, and any app via Now Playing.
+- **System stats** — CPU, GPU, memory, disk, and network gauges with detailed timeline graphs and per-process breakdowns.
+- **Shelf** — A drag-and-drop staging area for files, with AirDrop / LocalSend sharing and Quick Look.
+- **Clipboard** — Searchable clipboard history.
+- **Timers & calendar** — Countdowns, lock-screen widgets, and upcoming calendar events.
+- **Agents** — Live AI coding-agent sessions (Claude Code, Codex, Cursor, Gemini, Kimi, OpenCode) right in the notch: see what each session is doing, and approve, deny, or answer prompts inline via hooks.
+- **Screen capture & assistant** — Region/fullscreen capture routed straight to the shelf, plus an on-screen AI assistant.
+- **Extensions** — Third-party apps can publish live activities, lock-screen widgets, and dedicated notch experiences.
 
 ---
 

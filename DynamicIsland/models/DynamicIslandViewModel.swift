@@ -233,6 +233,30 @@ class DynamicIslandViewModel: NSObject, ObservableObject {
             }
             .store(in: &cancellables)
 
+        // The Agents tab grows to fit its live session list: when the measured
+        // content height changes, re-resize the open notch to match.
+        AgentBridgeController.shared.$desiredPanelHeight
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                guard self.notchState == .open else { return }
+                guard case .plugin(.agents) = self.coordinator.currentView else { return }
+                let updatedTarget = self.calculateDynamicNotchSize()
+                guard self.notchSize != updatedTarget else { return }
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    self.notchSize = updatedTarget
+                }
+                if let delegate = AppDelegate.shared {
+                    delegate.ensureWindowSize(
+                        addShadowPadding(to: updatedTarget, isMinimalistic: Defaults[.enableMinimalisticUI]),
+                        animated: true,
+                        force: false
+                    )
+                }
+            }
+            .store(in: &cancellables)
+
         Defaults.publisher(.openNotchWidth, options: [])
             .map { $0.newValue }
             .removeDuplicates()
@@ -357,6 +381,16 @@ class DynamicIslandViewModel: NSObject, ObservableObject {
         if coordinator.currentView == .notes || coordinator.currentView == .clipboard {
             let preferred = coordinator.notesLayoutState.preferredHeight
             adjustedSize.height = max(adjustedSize.height, preferred)
+            return adjustedSize
+        }
+
+        // Plugin-provided tabs (e.g. Agents) may declare a preferred open-notch
+        // height. Mirrors `ContentView.dynamicNotchSize` so the real window and
+        // the SwiftUI frame agree.
+        if case let .plugin(id) = coordinator.currentView,
+           let plugin = PluginHost.shared.tabPlugin(for: id),
+           let preferred = plugin.preferredNotchHeight(for: adjustedSize) {
+            adjustedSize.height = preferred
             return adjustedSize
         }
 

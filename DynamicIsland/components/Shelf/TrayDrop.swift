@@ -53,6 +53,20 @@ class TrayDrop: ObservableObject {
         print("DONE")
     }
 
+    func addFile(url: URL) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            do {
+                let item = try DropItem(url: url)
+                DispatchQueue.main.async {
+                    self.items.updateOrInsert(item, at: 0)
+                }
+            } catch {
+                print("❌ TrayDrop: Failed to add file to shelf: \(error)")
+            }
+        }
+    }
+
     func cleanExpiredFiles() {
         var inEdit = items
         let shouldCleanItems = items.filter(\.shouldClean)

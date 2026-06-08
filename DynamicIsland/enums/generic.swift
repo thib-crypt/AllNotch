@@ -70,17 +70,18 @@ public enum NotchState {
     case open
 }
 
-public enum NotchViews {
+public enum NotchViews: Hashable {
     case home
     case shelf
     case timer
     case stats
-    case colorPicker
     case notes
     case clipboard
     case terminal
-    case agents
     case extensionExperience
+    /// Generic case for any migrated feature-plugin tab (e.g. Todo, Agents).
+    /// The associated `PluginID` selects the concrete plugin via `PluginHost`.
+    case plugin(PluginID)
 }
 
 enum NotesLayoutState: Equatable {

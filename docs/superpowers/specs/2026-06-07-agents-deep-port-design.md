@@ -35,13 +35,16 @@ portage de `IslandSessionRow`. Le travail ci-dessous comble les écarts.
 - **Grille dans le notch fermé** : affichée **uniquement** quand au moins une
   session requiert l'attention (`liveAttentionCount > 0`). Sinon le notch fermé
   est inchangé.
-- **Cycle de vie** : auto-suppression à la fin (hook `SessionEnd` + poll PID
-  léger) **et** dismiss manuel.
+- **Cycle de vie** : auto-suppression à la fin (hook `SessionEnd`) **et**
+  dismiss manuel.
 - **Permissions** : inline fiable par requête. Pas d'allow-list persistante.
-- **Monitoring** : hook `SessionEnd` + poll PID léger (réutilise
-  `SessionState.refreshProcessLiveness` déjà dans le package), plutôt que de
-  porter `ProcessMonitoringCoordinator`/`ActiveAgentProcessDiscovery` (lourds,
-  vivent dans le target App d'OpenIsland).
+- **Monitoring** : le package `OpenIslandCore` d'AllNotch n'expose **pas** de PID
+  par session ni de process-discovery (`ActiveAgentProcessDiscovery` vit dans le
+  target App d'OpenIsland, non porté). Le lifecycle v1 repose donc sur le hook
+  `SessionEnd` (fiable au quit propre) + filtrage `isVisibleInIsland` +
+  `removeInvisibleSessions()`. Le cas « kill brutal du terminal » (pas de
+  `SessionEnd`) est couvert par le **dismiss manuel**. Le portage du
+  process-discovery est une amélioration différée.
 - **Hauteur Agents** : nouveau cas `.agents` dans `dynamicNotchSize`, calqué sur
   `.terminal` (fraction de l'écran), sans toucher `.home`.
 
@@ -53,15 +56,9 @@ portage de `IslandSessionRow`. Le travail ci-dessous comble les écarts.
   `isVisibleInIsland` avant tri : seules les sessions visibles s'affichent.
 - Après chaque `apply(event)` : appeler `state.removeInvisibleSessions()` puis
   re-snapshot (`bridgeServer.updateStateSnapshot`).
-- **Poll PID** : timer `@MainActor` (~3 s, démarré dans `startIfNeeded`, arrêté
-  dans `stop`) qui :
-  1. collecte les PID des sessions courantes (via `AgentSession` — champ pid),
-  2. teste la liveness avec `kill(pid, 0) == 0` (ESRCH ⇒ mort),
-  3. appelle `state.refreshProcessLiveness(aliveSessionIDs:)` (déjà présent),
-  4. `removeInvisibleSessions()` + re-publication si changement.
-  - Si une session n'expose pas de PID exploitable, elle reste gérée par les
-    hooks seuls (fallback : dismiss manuel).
 - `reconcileAttention()` continue de tourner sur la liste filtrée.
+- (Différé) Poll process-discovery pour détecter les morts brutales sans
+  `SessionEnd` ; non implémenté en v1 (pas de PID/discovery dans le package).
 
 ### U2 — Dismiss manuel
 

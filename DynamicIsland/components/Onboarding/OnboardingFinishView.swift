@@ -62,9 +62,7 @@ struct OnboardingFinishView: View {
                 
                 // Privacy Policy Link
                 Button(action: {
-                    if let url = URL(string: "https://ebullioscopic.github.io/DynamicIsland/privacy-policy") {
-                        NSWorkspace.shared.open(url)
-                    }
+                    NSWorkspace.shared.open(productPage)
                 }) {
                     Text("Privacy Policy")
                         .font(.caption)

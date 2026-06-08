@@ -77,6 +77,11 @@ func enabledStandardTabCount() -> Int {
         count += 1
     }
 
+    // Todo tab
+    if Defaults[.enableTodoFeature] {
+        count += 1
+    }
+
     // Stats tab
     if Defaults[.enableStatsFeature] {
         count += 1

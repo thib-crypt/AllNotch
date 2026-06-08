@@ -35,6 +35,28 @@ final class AgentBridgeController: ObservableObject {
     @Published private(set) var isBridgeReady = false
     @Published private(set) var statusMessage = "Bridge not started."
 
+    /// Notch-panel height the agents tab wants in order to display every session
+    /// row without scrolling. Measured by ``AgentsTabView`` from the intrinsic
+    /// content height and clamped to the screen by `AgentsPlugin.preferredNotchHeight`.
+    /// `0` means "not measured / no sessions" — the panel falls back to its base height.
+    @Published var desiredPanelHeight: CGFloat = 0
+
+    /// Number of visible sessions currently demanding the user's attention
+    /// (waiting on a permission or a question).
+    var attentionCount: Int {
+        sessions.filter { $0.phase.requiresAttention }.count
+    }
+
+    /// The "space invaders" grid cells for the closed notch, or `nil` when the
+    /// grid should not be surfaced. Per design, the grid only appears when at
+    /// least one session needs attention — otherwise the closed notch stays
+    /// untouched (media / idle).
+    var closedNotchAgentCells: [AgentGridCell]? {
+        guard attentionCount > 0 else { return nil }
+        let cells = AgentsClosedGrid.cells(for: sessions)
+        return cells.isEmpty ? nil : cells
+    }
+
     private let bridgeServer = BridgeServer()
     private var bridgeClient = LocalBridgeClient()
     private let commandClient = BridgeCommandClient()
@@ -154,8 +176,20 @@ final class AgentBridgeController: ObservableObject {
 
     private func apply(_ event: AgentEvent) {
         state.apply(event)
+        publishSessions()
+    }
+
+    /// Drops sessions that are no longer visible in the island (ended via the
+    /// `SessionEnd` hook, dead process, …), re-snapshots the server state, and
+    /// republishes the sorted, visible-only list the UI binds to.
+    ///
+    /// Filtering on `isVisibleInIsland` is what fixes the "session lingers after
+    /// I quit it" bug: previously the controller published *every* session it
+    /// had ever seen, so an ended session stayed on screen forever.
+    private func publishSessions() {
+        state.removeInvisibleSessions()
         bridgeServer.updateStateSnapshot(state)
-        sessions = sortedSessions(state.sessions)
+        sessions = sortedSessions(state.sessions.filter(\.isVisibleInIsland))
         reconcileAttention()
     }
 
@@ -175,6 +209,7 @@ final class AgentBridgeController: ObservableObject {
     }
 
     private func presentAttention(for session: AgentSession) {
+        logger.info("Agent attention: \(session.tool.displayName, privacy: .public) \(session.phase.rawValue, privacy: .public)")
         let accent = Color(agentHex: session.tool.brandColorHex) ?? .orange
         let icon = session.phase == .waitingForApproval ? "exclamationmark.shield.fill" : "questionmark.bubble.fill"
 
@@ -232,6 +267,17 @@ final class AgentBridgeController: ObservableObject {
         }
     }
 
+    // MARK: - Manual dismiss
+
+    /// Removes a session from the island on user request. Marks it ended in the
+    /// shared state (so it fails `isVisibleInIsland`) and republishes. This is
+    /// the escape hatch for sessions whose terminal was killed without a clean
+    /// `SessionEnd` hook ever arriving.
+    func dismiss(_ session: AgentSession) {
+        state.dismissSession(id: session.id)
+        publishSessions()
+    }
+
     // MARK: - Interactive permissions
 
     /// Resolves a pending permission request by replying to the held hook
@@ -251,6 +297,12 @@ final class AgentBridgeController: ObservableObject {
             .resolvePermission(sessionID: session.id, resolution: resolution),
             failureContext: "Approval"
         )
+
+        // Optimistically clear the prompt locally so the row leaves its
+        // attention state immediately, instead of waiting for the agent's
+        // follow-up event. A later real event reconciles the state.
+        state.resolvePermission(sessionID: session.id, resolution: resolution)
+        publishSessions()
     }
 
     /// Answers a pending structured question for the session.
@@ -259,6 +311,10 @@ final class AgentBridgeController: ObservableObject {
             .answerQuestion(sessionID: session.id, response: response),
             failureContext: "Answer"
         )
+
+        // Optimistically clear the question locally (see `resolve`).
+        state.answerQuestion(sessionID: session.id, response: response)
+        publishSessions()
     }
 
     private func sendCommand(_ command: BridgeCommand, failureContext: String) {
@@ -298,16 +354,3 @@ enum AgentSoundPlayer {
     }
 }
 
-private extension Color {
-    /// Hex initializer for agent brand colors (e.g. "#RRGGBB").
-    init?(agentHex hex: String) {
-        var s = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        if s.hasPrefix("#") { s.removeFirst() }
-        guard s.count == 6, let value = UInt32(s, radix: 16) else { return nil }
-        self.init(
-            red: Double((value >> 16) & 0xFF) / 255.0,
-            green: Double((value >> 8) & 0xFF) / 255.0,
-            blue: Double(value & 0xFF) / 255.0
-        )
-    }
-}

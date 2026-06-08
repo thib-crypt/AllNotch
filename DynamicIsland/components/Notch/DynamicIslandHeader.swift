@@ -198,6 +198,10 @@ struct DynamicIslandHeader: View {
                         }
                     }
                     
+                    if Defaults[.enableScreenshotFeature] {
+                        ScreenCaptureMenuButton()
+                    }
+
                     if Defaults[.settingsIconInNotch] {
                         Button(action: {
                             SettingsWindowController.shared.showWindow()

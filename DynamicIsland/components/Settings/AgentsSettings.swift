@@ -46,7 +46,7 @@ struct AgentsSettings: View {
                 } header: {
                     Text("Enrolled Agents")
                 } footer: {
-                    Text("Installing an agent adds AllNotch's hooks to its configuration so sessions appear here. Removing it cleans the hooks back out.")
+                    Text("Installing an agent adds AllNotch's hooks to its configuration so sessions appear here. Removing it cleans the hooks back out.\n\nAgents load hooks only when they start, so restart any already-running CLI session (quit and relaunch it) after enrolling. Gemini CLI reports session activity but has no permission hook, so its approval prompts can't be intercepted yet.")
                 }
 
                 Section {

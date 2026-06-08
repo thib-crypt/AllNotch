@@ -12,15 +12,15 @@
 |--------|------|---------|-------------------|
 | **Atoll** | [Ebullioscopic/Atoll](https://github.com/Ebullioscopic/Atoll) | GPL v3 | Base UI/UX notch, médias, stats système, animations SwiftUI |
 | **Open Island** | [Octane0411/open-vibe-island](https://github.com/Octane0411/open-vibe-island) | GPL v3 | Bridge agents IA, hook system, jump-back terminal |
-| **CodexIsland** | [ericjypark/codex-island](https://github.com/ericjypark/codex-island) | MIT | UI pill notch-native, visualisations usage/coût tokens, suivi 5h/7j |
+| **CodexIsland** | [ericjypark/codex-island](https://github.com/ericjypark/codex-island) | MIT | *(Mis de côté pour l'instant)* UI pill notch-native, visualisations usage/coût tokens |
 
 > ⚠️ **Licence** : Atoll et Open Island sont sous GPL v3, CodexIsland sous MIT. La fusion impose que AllNotch soit distribué sous **GPL v3**.
 
 ### Ce que AllNotch apporte de neuf
 
-- **Un seul notch** pour tout : médias, système, agents IA, coût tokens — sans jongler entre plusieurs apps
-- **Onglet Agents** intégré dans le shell UI d'Atoll, alimenté par le bridge d'Open Island
-- **Onglet Usage/Cost** intégré dans le même panel, repris et amélioré de CodexIsland
+- **Un seul notch** pour tout : médias, système, agents IA — sans jongler entre plusieurs apps
+- **Onglet Agents** intégré dans le shell UI d'Atoll, avec le code/UI exact d'Open Vibe Island (adapté aux fondations/Atoll)
+- **Onglet Usage/Cost** *(Mis de côté pour l'instant)*
 - **Cohérence visuelle** : une seule charte d'animation, un seul système de settings
 
 ***
@@ -233,48 +233,18 @@ Ajouter `MediaBridge/NowPlayingProvider.swift` comme wrapper observable (`@Obser
 
 ### Phase 3 — Onglet Agents (4-5 jours)
 
-> **État (tranche 1 — Claude Code, livrée)** : OpenIslandCore intégré comme package SPM local (`Packages/AgentBridge`, module interne `OpenIslandCore` préservé) ; produits `AgentHooks`/`AgentSetup`. Chemins runtime débrandés (`~/Library/Application Support/AllNotch`, socket `/tmp/allnotch-<uid>.sock`, binaire `AllNotchHooks`). Onglet **Agents** câblé (`NotchViews.agents` + `TabModel`, flag `enableAgentsFeature`) via `AgentBridgeController` (BridgeServer + LocalBridgeClient observer → `SessionState` observable). Jump-back porté (`TerminalJumpService`). Binaire `AgentHooks` embarqué dans `AllNotch.app/Contents/Helpers/`. Install des hooks Claude depuis l'onglet. Build app + package verts. **Reste** : autres agents (Codex/Cursor/Gemini/…), enrichissement UI (markdown, phases détaillées), discovery/monitoring de process, section Settings dédiée.
+> **État (tranche 1 — Claude Code, livrée)** : OpenIslandCore intégré comme package SPM local (`Packages/AgentBridge`, module interne `OpenIslandCore` préservé) ; produits `AgentHooks`/`AgentSetup`. Chemins runtime débrandés (`~/Library/Application Support/AllNotch`, socket `/tmp/allnotch-<uid>.sock`, binaire `AllNotchHooks`). Onglet **Agents** câblé (`NotchViews.agents` + `TabModel`, flag `enableAgentsFeature`) via `AgentBridgeController` (BridgeServer + LocalBridgeClient observer → `SessionState` observable). Jump-back porté (`TerminalJumpService`). Binaire `AgentHooks` embarqué dans `AllNotch.app/Contents/Helpers/`. Install des hooks Claude depuis l'onglet. Build app + package verts. **Reste** : autres agents (Codex/Cursor/Gemini/…), portage complet du code/UI exact d'Open Vibe Island (`IslandSessionRow`, `StructuredQuestionPromptView`, support des replies de complétion via `TerminalTextSender`), discovery/monitoring de process, section Settings dédiée.
 
-Reprendre depuis Open Island :
+Reprendre le code UI exact depuis Open Vibe Island :
+- Remplacer les cartes customs simplifiées `AgentActivityCard` et `AgentNotificationCard` par un portage fidèle de `IslandSessionRow.swift`
+- Intégrer `StructuredQuestionPromptView` et le champ de réponse adapté de `IslandPanelView.swift`
+- Ajouter `TerminalTextSender.swift` pour l'envoi de texte en direct (tmux, Ghostty)
+- Mettre à jour `AgentsTabView.swift` pour utiliser `IslandSessionRow` avec les gestionnaires d'actions (Approve, Answer, Reply, Jump, Dismiss)
+- Conserver la compatibilité avec Atoll / AllNotch (repasser par `AgentBridgeController.shared`)
 
-```
-Sources/OpenIslandCore/ → Sources/AgentBridge/
-  BridgeServer.swift          (Unix socket IPC, écoute sur ~/Library/Application Support/AllNotch/bridge.sock)
-  SessionStore.swift          (sessions @Observable)
-  HookPayload.swift           (décodage JSON hooks)
-  AgentDetector.swift         (découverte sessions via ps/lsof)
-  TerminalJumper.swift        (jump-back)
-```
+### Phase 4 — Onglet Usage (Mis de côté pour l'instant)
 
-```
-Sources/OpenIslandHooks/ → Sources/AgentHooks/
-  main.swift                  (CLI léger, stdin → socket)
-```
-
-```
-Sources/OpenIslandSetup/ → Sources/AgentSetup/
-  main.swift                  (install/uninstall hooks dans ~/.claude, ~/.codex, etc.)
-```
-
-Créer `Sources/AllNotchApp/Tabs/AgentsTab.swift` qui observe `AgentBridge.SessionStore`.
-
-**Changements requis** : remplacer les chemins `~/Library/Application Support/OpenIsland/` par `~/Library/Application Support/AllNotch/` dans tous les fichiers.
-
-### Phase 4 — Onglet Usage (3-4 jours)
-
-Reprendre depuis CodexIsland :
-
-```
-Sources/Usage/UsageFetcher.swift  → UsageBridge/UsageFetcher.swift
-Sources/Usage/UsageStore.swift    → UsageBridge/UsageStore.swift
-Sources/Cost/                     → UsageBridge/Cost/
-Sources/Model/                    → UsageBridge/Models/
-Sources/Views/UsageView.swift     → AllNotchApp/Tabs/UsageTab/UsageView.swift
-Sources/Views/CostView.swift      → AllNotchApp/Tabs/UsageTab/CostView.swift
-Sources/Theme/                    → intégrer dans la charte Atoll
-```
-
-Adapter les `UserDefaults` keys de `MacIsland.*` vers `AllNotch.*`.
+> ⚠️ **CodexIsland mis de côté** : Pour simplifier et accélérer l'intégration, la fonctionnalité de suivi de jetons/coût issue de CodexIsland est mise de côté temporairement. Les fichiers et structures correspondants ne sont pas intégrés pour l'instant.
 
 ### Phase 5 — Settings unifiés (2-3 jours)
 
