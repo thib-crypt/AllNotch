@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		211F33882FD59FB700FA52B6 /* WebP in Frameworks */ = {isa = PBXBuildFile; productRef = 211F33872FD59FB700FA52B6 /* WebP */; };
+		4723BAE960F1163EF6D31406 /* OpenIslandCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5B2E57CCAFF7AEF3E6FC558F /* OpenIslandCore */; };
 		7E1ADF1D2EA209B1001DA867 /* SkyLightWindow in Frameworks */ = {isa = PBXBuildFile; productRef = 7E61181E2E24071E0050006C /* SkyLightWindow */; };
 		7E288D122F1659EF0020C117 /* AtollExtensionKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E288D112F1659EF0020C117 /* AtollExtensionKit */; };
 		7E6118142E24071E0050006C /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 14D032192C68F32E0096E6A1 /* LaunchAtLogin */; };
@@ -116,6 +118,7 @@
 			files = (
 				7EF19C172F577040005B9929 /* SwiftTerm in Frameworks */,
 				7EF10C122F817ECF004229A0 /* Accelerate.framework in Frameworks */,
+				211F33882FD59FB700FA52B6 /* WebP in Frameworks */,
 				7E1ADF1D2EA209B1001DA867 /* SkyLightWindow in Frameworks */,
 				7EE1D73F2E6B1E1200997219 /* IOKit.framework in Frameworks */,
 				7EE1D73D2E6B1E0B00997219 /* ApplicationServices.framework in Frameworks */,
@@ -128,6 +131,7 @@
 				7E6118152E24071E0050006C /* Sparkle in Frameworks */,
 				7E288D122F1659EF0020C117 /* AtollExtensionKit in Frameworks */,
 				7E6118142E24071E0050006C /* LaunchAtLogin in Frameworks */,
+				4723BAE960F1163EF6D31406 /* OpenIslandCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -200,6 +204,7 @@
 				F54406E52CD4987A00C7AFD9 /* Resources */,
 				7EA69B1B2F5AE13500EB2D16 /* CopyFiles */,
 				7EFAA8AA2F6F12F3000A99E8 /* ShellScript */,
+				BF3C56711DF5807CF2E4785B /* Build & Embed Agent Helpers */,
 			);
 			buildRules = (
 			);
@@ -222,6 +227,8 @@
 				7E61181E2E24071E0050006C /* SkyLightWindow */,
 				7E288D112F1659EF0020C117 /* AtollExtensionKit */,
 				7EF19C162F577040005B9929 /* SwiftTerm */,
+				5B2E57CCAFF7AEF3E6FC558F /* OpenIslandCore */,
+				211F33872FD59FB700FA52B6 /* WebP */,
 			);
 			productName = DynamicIsland;
 			productReference = F54406E72CD4987A00C7AFD9 /* AllNotch.app */;
@@ -242,7 +249,7 @@
 					};
 				};
 			};
-			buildConfigurationList = F54406E22CD4987A00C7AFD9 /* Build configuration list for PBXProject "DynamicIsland" */;
+			buildConfigurationList = F54406E22CD4987A00C7AFD9 /* Build configuration list for PBXProject "AllNotch" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -269,6 +276,8 @@
 				7E09D5962EB7B497005AF41D /* XCRemoteSwiftPackageReference "open-meteo" */,
 				7E288D102F1659EF0020C117 /* XCRemoteSwiftPackageReference "AtollExtensionKit" */,
 				7EF19C152F577040005B9929 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+				3403D8007CA3CD8C745AF4D4 /* XCLocalSwiftPackageReference "Packages/AgentBridge" */,
+				211F33862FD59FB700FA52B6 /* XCRemoteSwiftPackageReference "Swift-WebP" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F54406E82CD4987A00C7AFD9 /* Products */;
@@ -315,6 +324,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if [ \"$CONFIGURATION\" != \"Release\" ] || [ \"$ACTION\" != \"install\" ]; then\n\texit 0\nfi\n\nAPP=\"$CODESIGNING_FOLDER_PATH\"\nSPARKLE=\"$APP/Contents/Frameworks/Sparkle.framework\"\nXPC_DIR=\"$SPARKLE/Versions/Current/XPCServices\"\n\nif [ ! -d \"$XPC_DIR\" ]; then\n\texit 0\nfi\n\nfor xpc in \"$XPC_DIR\"/*.xpc; do\n\t/usr/bin/codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --timestamp --options runtime --preserve-metadata=identifier,entitlements \"$xpc\"\ndone\n\n/usr/bin/codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --timestamp --options runtime --preserve-metadata=identifier,entitlements \"$SPARKLE\"\n";
+		};
+		BF3C56711DF5807CF2E4785B /* Build & Embed Agent Helpers */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build & Embed Agent Helpers";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nPKG_DIR=\"$SRCROOT/Packages/AgentBridge\"\nHELPERS=\"$BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/Helpers\"\nmkdir -p \"$HELPERS\"\n\nARCH_FLAGS=\"\"\nfor a in $ARCHS; do ARCH_FLAGS=\"$ARCH_FLAGS --arch $a\"; done\n\n# Self-contained CLI (SwiftPM statically links OpenIslandCore into it).\nswift build --package-path \"$PKG_DIR\" -c release $ARCH_FLAGS --product AgentHooks\nBIN_DIR=\"$(swift build --package-path \"$PKG_DIR\" -c release $ARCH_FLAGS --show-bin-path)\"\ncp -f \"$BIN_DIR/AgentHooks\" \"$HELPERS/AgentHooks\"\nchmod 0755 \"$HELPERS/AgentHooks\"\n\nif [ \"$CODE_SIGNING_ALLOWED\" = \"YES\" ] && [ -n \"$EXPANDED_CODE_SIGN_IDENTITY\" ]; then\n  codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --timestamp=none --options runtime \"$HELPERS/AgentHooks\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -458,7 +486,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"DynamicIsland/Preview Content\"";
 				DEVELOPMENT_TEAM = PG46BWSK3T;
 				ENABLE_APP_SANDBOX = NO;
@@ -499,8 +527,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 2.2.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.thib-magic.AllNotch.dev;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.thib-magic.AllNotch.dev";
 				PRODUCT_NAME = AllNotch;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
@@ -530,7 +558,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"DynamicIsland/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = PG46BWSK3T;
@@ -572,8 +600,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 2.2.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.thib-magic.AllNotch;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.thib-magic.AllNotch";
 				PRODUCT_NAME = AllNotch;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
@@ -595,7 +623,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		F54406E22CD4987A00C7AFD9 /* Build configuration list for PBXProject "DynamicIsland" */ = {
+		F54406E22CD4987A00C7AFD9 /* Build configuration list for PBXProject "AllNotch" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F54406F42CD4987B00C7AFD9 /* Debug */,
@@ -614,6 +642,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		3403D8007CA3CD8C745AF4D4 /* XCLocalSwiftPackageReference "Packages/AgentBridge" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/AgentBridge;
+		};
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
 		146BC4352D366E9B0047C66A /* XCRemoteSwiftPackageReference "MacroVisionKit" */ = {
@@ -638,6 +673,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 2.6.4;
+			};
+		};
+		211F33862FD59FB700FA52B6 /* XCRemoteSwiftPackageReference "Swift-WebP" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ainame/Swift-WebP.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.6.1;
 			};
 		};
 		7E09D5962EB7B497005AF41D /* XCRemoteSwiftPackageReference "open-meteo" */ = {
@@ -737,6 +780,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 14D0321B2C68F3350096E6A1 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
+		};
+		211F33872FD59FB700FA52B6 /* WebP */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 211F33862FD59FB700FA52B6 /* XCRemoteSwiftPackageReference "Swift-WebP" */;
+			productName = WebP;
+		};
+		5B2E57CCAFF7AEF3E6FC558F /* OpenIslandCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3403D8007CA3CD8C745AF4D4 /* XCLocalSwiftPackageReference "Packages/AgentBridge" */;
+			productName = OpenIslandCore;
 		};
 		7E288D112F1659EF0020C117 /* AtollExtensionKit */ = {
 			isa = XCSwiftPackageProductDependency;

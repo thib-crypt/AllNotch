@@ -60,7 +60,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case stats
     case clipboard
     case screenAssistant
-    case colorPicker
     case downloads
     case shelf
     case shortcuts
@@ -77,8 +76,8 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .media, .liveActivities, .lockScreen, .devices:                 return .mediaAndDisplay
         case .hudAndOSD, .battery:                                           return .system
         case .timer, .calendar, .notes:                                      return .productivity
-        case .clipboard, .screenAssistant, .colorPicker, .shelf,
-             .downloads, .shortcuts:                                         return .utilities
+        case .clipboard, .screenAssistant, .shelf,
+             .downloads, .shortcuts:                                        return .utilities
         case .stats, .terminal:                                              return .developer
         case .extensions:                                                    return .integrations
         case .about:                                                         return .info
@@ -101,7 +100,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .stats: return String(localized: "Stats")
         case .clipboard: return String(localized: "Clipboard")
         case .screenAssistant: return String(localized: "Screen Assistant")
-        case .colorPicker: return String(localized: "Color Picker")
         case .downloads: return String(localized: "Downloads")
         case .shelf: return String(localized: "Shelf")
         case .shortcuts: return String(localized: "Shortcuts")
@@ -127,7 +125,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .stats: return "chart.xyaxis.line"
         case .clipboard: return "clipboard"
         case .screenAssistant: return "brain.head.profile"
-        case .colorPicker: return "eyedropper"
         case .downloads: return "square.and.arrow.down"
         case .shelf: return "books.vertical"
         case .shortcuts: return "keyboard"
@@ -153,7 +150,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .stats: return .teal
         case .clipboard: return .mint
         case .screenAssistant: return .pink
-        case .colorPicker: return .accentColor
         case .downloads: return .gray
         case .shelf: return .brown
         case .shortcuts: return .orange
@@ -270,6 +266,13 @@ extension View {
     }
 }
 
+/// Sidebar selection that can be either a built-in tab or a plugin-provided
+/// section. Lets the data-driven plugin entries coexist with the legacy enum.
+private enum SettingsSelection: Hashable {
+    case tab(SettingsTab)
+    case plugin(PluginID)
+}
+
 private struct SettingsForm<Content: View>: View {
     let tab: SettingsTab
     @ViewBuilder var content: () -> Content
@@ -293,8 +296,9 @@ private struct SettingsForm<Content: View>: View {
 }
 
 struct SettingsView: View {
-    @State private var selectedTab: SettingsTab = .general
+    @State private var selection: SettingsSelection = .tab(.general)
     @State private var searchText: String = ""
+    @ObservedObject private var pluginHost = PluginHost.shared
     @StateObject private var highlightCoordinator = SettingsHighlightCoordinator()
     @Default(.enableMinimalisticUI) var enableMinimalisticUI
 
@@ -319,11 +323,11 @@ struct SettingsView: View {
                     .padding(.horizontal, 12)
 
                 List(selection: selectionBinding) {
-                    ForEach(groupedFilteredTabs, id: \.group) { section in
+                    ForEach(groupedSidebarEntries, id: \.group) { section in
                         Section {
-                            ForEach(section.tabs) { tab in
-                                NavigationLink(value: tab) {
-                                    sidebarRow(for: tab)
+                            ForEach(section.entries, id: \.self) { entry in
+                                NavigationLink(value: entry) {
+                                    sidebarRow(for: entry)
                                 }
                             }
                         } header: {
@@ -354,8 +358,12 @@ struct SettingsView: View {
         .onChange(of: searchText) { _, newValue in
             let matches = tabsMatchingSearch(newValue)
             guard let firstMatch = matches.first else { return }
-            if !matches.contains(resolvedSelection) {
-                selectedTab = firstMatch
+            let currentTab: SettingsTab? = {
+                if case let .tab(tab) = resolvedSelection { return tab }
+                return nil
+            }()
+            if currentTab == nil || !matches.contains(currentTab!) {
+                selection = .tab(firstMatch)
             }
         }
         .background {
@@ -380,8 +388,15 @@ struct SettingsView: View {
         }
     }
 
-    private var resolvedSelection: SettingsTab {
-        availableTabs.contains(selectedTab) ? selectedTab : (availableTabs.first ?? .general)
+    private var resolvedSelection: SettingsSelection {
+        let entries = allSidebarEntries
+        if entries.contains(selection) { return selection }
+        return entries.first ?? .tab(.general)
+    }
+
+    /// Flattened sidebar entries (built-in tabs + plugin sections) in display order.
+    private var allSidebarEntries: [SettingsSelection] {
+        groupedSidebarEntries.flatMap { $0.entries }
     }
 
     @ToolbarContentBuilder
@@ -410,23 +425,23 @@ struct SettingsView: View {
         tabsMatchingSearch(searchText)
     }
 
-    private var selectionBinding: Binding<SettingsTab> {
+    private var selectionBinding: Binding<SettingsSelection> {
         Binding(
             get: { resolvedSelection },
             set: { newValue in
-                selectedTab = newValue
+                selection = newValue
             }
         )
     }
 
     @ViewBuilder
-    private func sidebarIcon(for tab: SettingsTab) -> some View {
+    private func sidebarIcon(icon: String, tint: Color) -> some View {
         RoundedRectangle(cornerRadius: 8, style: .continuous)
             .fill(
                 LinearGradient(
                     colors: [
-                        tab.tint.opacity(1),
-                        tab.tint.opacity(0.7)
+                        tint.opacity(1),
+                        tint.opacity(0.7)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -438,18 +453,34 @@ struct SettingsView: View {
                     .strokeBorder(Color.white.opacity(0.2), lineWidth: 0.7)
                     .blendMode(.plusLighter)
             }
-            .shadow(color: tab.tint.opacity(0.35), radius: 2, x: 0, y: 1)
+            .shadow(color: tint.opacity(0.35), radius: 2, x: 0, y: 1)
             .overlay {
-                Image(systemName: tab.systemImage)
+                Image(systemName: icon)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Color.white)
             }
     }
 
     @ViewBuilder
-    private func sidebarRow(for tab: SettingsTab) -> some View {
+    private func sidebarRow(for entry: SettingsSelection) -> some View {
+        switch entry {
+        case .tab(let tab):
+            sidebarTabRow(for: tab)
+        case .plugin(let id):
+            if let plugin = pluginHost.settingsPlugin(for: id) {
+                HStack(spacing: 10) {
+                    sidebarIcon(icon: plugin.icon, tint: .blue)
+                    Text(plugin.displayName)
+                }
+                .padding(.vertical, 4)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func sidebarTabRow(for tab: SettingsTab) -> some View {
         HStack(spacing: 10) {
-            sidebarIcon(for: tab)
+            sidebarIcon(icon: tab.systemImage, tint: tab.tint)
             Text(tab.title)
             if tab == .downloads {
                 Spacer()
@@ -500,7 +531,6 @@ struct SettingsView: View {
             // Utilities
             .clipboard,
             .screenAssistant,
-            .colorPicker,
             .shelf,
             .downloads,
             .shortcuts,
@@ -518,14 +548,28 @@ struct SettingsView: View {
 
     /// Groups the filtered tabs into sidebar sections, preserving both
     /// the group order and the per-group tab order from `availableTabs`.
-    private var groupedFilteredTabs: [(group: SettingsTabGroup, tabs: [SettingsTab])] {
-        let visible = filteredTabs
-        var result: [(group: SettingsTabGroup, tabs: [SettingsTab])] = []
+    private var groupedSidebarEntries: [(group: SettingsTabGroup, entries: [SettingsSelection])] {
+        let visibleTabs = filteredTabs
+        let trimmedSearch = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        var result: [(group: SettingsTabGroup, entries: [SettingsSelection])] = []
 
         for group in SettingsTabGroup.allCases {
-            let tabs = visible.filter { $0.group == group }
-            if !tabs.isEmpty {
-                result.append((group: group, tabs: tabs))
+            var entries: [SettingsSelection] = visibleTabs
+                .filter { $0.group == group }
+                .map { .tab($0) }
+
+            // Plugin-provided sections, mapped into their settings group.
+            let pluginEntries = pluginHost.settingsPlugins
+                .filter { SettingsTabGroup(rawValue: $0.settingsGroup.rawValue) == group }
+                .filter { plugin in
+                    trimmedSearch.isEmpty
+                        || plugin.displayName.localizedCaseInsensitiveContains(trimmedSearch)
+                }
+                .map { SettingsSelection.plugin($0.id) }
+            entries.append(contentsOf: pluginEntries)
+
+            if !entries.isEmpty {
+                result.append((group: group, entries: entries))
             }
         }
 
@@ -551,7 +595,7 @@ struct SettingsView: View {
     private func handleSearchSuggestionSelection(_ suggestion: SettingsSearchEntry) {
         guard suggestion.tab != .downloads else { return }
         highlightCoordinator.focus(on: suggestion)
-        selectedTab = suggestion.tab
+        selection = .tab(suggestion.tab)
     }
 
     private struct SettingsSidebarSearchBar: View {
@@ -905,11 +949,6 @@ struct SettingsView: View {
             SettingsSearchEntry(tab: .screenAssistant, title: "Display Mode", keywords: ["screen assistant", "mode"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Display Mode")),
 
             // Color Picker
-            SettingsSearchEntry(tab: .colorPicker, title: "Enable Color Picker", keywords: ["color picker", "eyedropper"], highlightID: SettingsTab.colorPicker.highlightID(for: "Enable Color Picker")),
-            SettingsSearchEntry(tab: .colorPicker, title: "Show Color Picker Icon", keywords: ["color icon", "toolbar"], highlightID: SettingsTab.colorPicker.highlightID(for: "Show Color Picker Icon")),
-            SettingsSearchEntry(tab: .colorPicker, title: "Display Mode", keywords: ["color", "list"], highlightID: SettingsTab.colorPicker.highlightID(for: "Display Mode")),
-            SettingsSearchEntry(tab: .colorPicker, title: "History Size", keywords: ["color history"], highlightID: SettingsTab.colorPicker.highlightID(for: "History Size")),
-            SettingsSearchEntry(tab: .colorPicker, title: "Show All Color Formats", keywords: ["hex", "hsl", "color formats"], highlightID: SettingsTab.colorPicker.highlightID(for: "Show All Color Formats")),
 
             // Terminal
             SettingsSearchEntry(tab: .terminal, title: "Enable terminal", keywords: ["terminal", "guake", "shell"], highlightID: SettingsTab.terminal.highlightID(for: "Enable terminal")),
@@ -930,10 +969,24 @@ struct SettingsView: View {
 
     private func isTabVisible(_ tab: SettingsTab) -> Bool {
         switch tab {
-        case .timer, .stats, .clipboard, .screenAssistant, .colorPicker, .shelf, .notes, .terminal:
+        case .timer, .stats, .clipboard, .screenAssistant, .shelf, .notes, .terminal:
             return !enableMinimalisticUI
         default:
             return true
+        }
+    }
+
+    @ViewBuilder
+    private func detailView(for entry: SettingsSelection) -> some View {
+        switch entry {
+        case .tab(let tab):
+            detailView(for: tab)
+        case .plugin(let id):
+            if let plugin = pluginHost.settingsPlugin(for: id) {
+                plugin.makeSettingsView()
+            } else {
+                detailView(for: .general)
+            }
         }
     }
 
@@ -995,10 +1048,6 @@ struct SettingsView: View {
         case .screenAssistant:
             SettingsForm(tab: .screenAssistant) {
                 ScreenAssistantSettings()
-            }
-        case .colorPicker:
-            SettingsForm(tab: .colorPicker) {
-                ColorPickerSettings()
             }
         case .downloads:
             SettingsForm(tab: .downloads) {
@@ -3526,94 +3575,165 @@ struct CalendarSettings: View {
 struct About: View {
     @State private var showBuildNumber: Bool = false
     let updaterController: SPUStandardUpdaterController
-    @Environment(\.openWindow) var openWindow
+
     var body: some View {
-        VStack {
-            Form {
-                Section {
-                    HStack {
-                        Text("Release name")
-                        Spacer()
-                        Text(Defaults[.releaseName])
+        ScrollView {
+            VStack(spacing: 0) {
+                // App identity header
+                VStack(spacing: 10) {
+                    Image(nsImage: NSImage(named: NSImage.applicationIconName) ?? NSImage())
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: 88, height: 88)
+                        .shadow(color: .black.opacity(0.25), radius: 10, y: 4)
+
+                    Text("AllNotch")
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+
+                    HStack(spacing: 6) {
+                        Text("Version \(Bundle.main.releaseVersionNumber ?? "0.1")")
                             .foregroundStyle(.secondary)
-                    }
-                    HStack {
-                        Text("Version")
-                        Spacer()
                         if showBuildNumber {
                             Text("(\(Bundle.main.buildVersionNumber ?? ""))")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.tertiary)
                         }
-                        Text(Bundle.main.releaseVersionNumber ?? "unkown")
-                            .foregroundStyle(.secondary)
+                        Text("·")
+                            .foregroundStyle(.tertiary)
+                        Text(Defaults[.releaseName])
+                            .foregroundStyle(.tertiary)
+                            .italic()
                     }
+                    .font(.subheadline)
                     .onTapGesture {
-                        withAnimation {
+                        withAnimation(.spring(response: 0.3)) {
                             showBuildNumber.toggle()
                         }
                     }
-                } header: {
-                    Text("Version info")
+
+                    Text("Your MacBook notch, elevated.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 2)
                 }
+                .padding(.top, 28)
+                .padding(.bottom, 20)
 
-                UpdaterSettingsView(updater: updaterController.updater)
+                Divider().padding(.horizontal, 20)
 
-                HStack(spacing: 30) {
-                    Spacer(minLength: 0)
-                    Button {
-                        NSWorkspace.shared.open(sponsorPage)
-                    } label: {
-                        VStack(spacing: 5) {
-                            Image(systemName: "cup.and.saucer.fill")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(.white)
-                            Text("Donate")
-                                .foregroundStyle(.white)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    Spacer(minLength: 0)
+                // Actions row
+                HStack(spacing: 12) {
                     Button {
                         NSWorkspace.shared.open(productPage)
                     } label: {
-                        VStack(spacing: 5) {
+                        HStack(spacing: 6) {
                             Image("Github")
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(width: 18)
+                                .frame(width: 14, height: 14)
                             Text("GitHub")
-                                .foregroundStyle(.white)
                         }
-                        .contentShape(Rectangle())
                     }
-                    Spacer(minLength: 0)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
+                    CheckForUpdatesView(updater: updaterController.updater)
+                        .controlSize(.small)
                 }
-                .buttonStyle(PlainButtonStyle())
-                Text("Your support funds software development learning for students in 9th–12th grade.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 14)
+
+                Divider().padding(.horizontal, 20)
+
+                // Open source credits
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Built on open source")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
+                        .tracking(0.6)
+                        .padding(.bottom, 6)
+
+                    AboutCreditRow(
+                        name: "Atoll",
+                        role: "Core notch engine",
+                        url: URL(string: "https://github.com/Ebullioscopic/Atoll")!
+                    )
+                    Divider().padding(.leading, 0)
+                    AboutCreditRow(
+                        name: "Open Island",
+                        role: "AI agents bridge",
+                        url: URL(string: "https://github.com/Octane0411/open-vibe-island")!
+                    )
+                    Divider().padding(.leading, 0)
+                    AboutCreditRow(
+                        name: "CodexIsland",
+                        role: "Usage & cost tracking",
+                        url: URL(string: "https://github.com/ericjypark/codex-island")!
+                    )
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+
+                Divider().padding(.horizontal, 20)
+
+                UpdaterSettingsView(updater: updaterController.updater)
+                    .padding(.horizontal, 4)
+
+                // Footer
+                VStack(spacing: 3) {
+                    Text("Free and open-source software")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("GNU General Public License v3")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.vertical, 14)
+                .frame(maxWidth: .infinity)
+                .background(.regularMaterial)
             }
-            VStack(spacing: 0) {
-                Divider()
-                Text("Made with ❤️ — AllNotch")
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 5)
-                    .padding(.bottom, 7)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 10)
-            }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .background(.regularMaterial)
         }
         .toolbar {
-            //            Button("Welcome window") {
-            //                openWindow(id: "onboarding")
-            //            }
-            //            .controlSize(.extraLarge)
-            CheckForUpdatesView(updater: updaterController.updater)
+            EmptyView()
         }
         .navigationTitle("About")
+    }
+}
+
+private struct AboutCreditRow: View {
+    let name: String
+    let role: String
+    let url: URL
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Button {
+            NSWorkspace.shared.open(url)
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(name)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(isHovering ? Color.accentColor : .primary)
+                    Text(role)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .opacity(isHovering ? 1 : 0.4)
+            }
+            .padding(.vertical, 5)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) { isHovering = hovering }
+        }
     }
 }
 
@@ -6432,6 +6552,68 @@ func warningBadge(_ text: String, _ description: String) -> some View {
     }
 }
 
+struct TodoSettings: View {
+    @Default(.enableTodoFeature) private var enableTodoFeature
+    @Default(.todoHideCompleted) private var hideCompleted
+    @Default(.todoShowBadge) private var showBadge
+    @Default(.todoAccentColor) private var accentColor
+    @Default(.todoTasks) private var tasks
+
+    private func highlightID(_ title: String) -> String {
+        "todo-\(title)"
+    }
+
+    private var completedCount: Int {
+        tasks.filter { $0.isCompleted }.count
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                Defaults.Toggle(key: .enableTodoFeature) {
+                    Text("Enable To-Do List")
+                }
+                .settingsHighlight(id: highlightID("Enable To-Do List"))
+            } footer: {
+                Text("Adds a To-Do tab to the notch for quick task capture.")
+            }
+
+            if enableTodoFeature {
+                Section("Appearance") {
+                    Defaults.Toggle(key: .todoHideCompleted) {
+                        Text("Hide completed tasks")
+                    }
+                    .settingsHighlight(id: highlightID("Hide completed tasks"))
+
+                    Defaults.Toggle(key: .todoShowBadge) {
+                        Text("Show pending count badge on the tab")
+                    }
+                    .settingsHighlight(id: highlightID("Show pending count badge on the tab"))
+
+                    ColorPicker("Accent colour", selection: $accentColor, supportsOpacity: false)
+                        .settingsHighlight(id: highlightID("Accent colour"))
+                }
+
+                Section {
+                    Button(role: .destructive) {
+                        withAnimation {
+                            tasks.removeAll { $0.isCompleted }
+                        }
+                    } label: {
+                        Text("Clear completed tasks")
+                    }
+                    .disabled(completedCount == 0)
+                } footer: {
+                    if completedCount > 0 {
+                        Text("\(completedCount) completed task\(completedCount == 1 ? "" : "s").")
+                    }
+                }
+            }
+        }
+        .navigationTitle("To-Do List")
+    }
+}
+
 struct TimerSettings: View {
     @ObservedObject private var coordinator = DynamicIslandViewCoordinator.shared
     @Default(.enableTimerFeature) var enableTimerFeature
@@ -7656,7 +7838,7 @@ struct ColorPickerSettings: View {
     @Default(.showColorPickerIcon) var showColorPickerIcon
 
     private func highlightID(_ title: String) -> String {
-        SettingsTab.colorPicker.highlightID(for: title)
+        "colorPicker-\(title)"
     }
 
     var body: some View {

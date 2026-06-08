@@ -36,6 +36,7 @@ enum SneakContentType: Equatable {
     case privacy
     case lockScreen
     case capsLock
+    case agentAttention
     case extensionLiveActivity(bundleID: String, activityID: String)
 }
 
@@ -56,7 +57,8 @@ extension SneakContentType {
              (.bluetoothAudio, .bluetoothAudio),
              (.privacy, .privacy),
              (.lockScreen, .lockScreen),
-             (.capsLock, .capsLock):
+             (.capsLock, .capsLock),
+             (.agentAttention, .agentAttention):
             return true
         case let (.extensionLiveActivity(lb, la), .extensionLiveActivity(rb, ra)):
             return lb == rb && la == ra
@@ -349,7 +351,7 @@ class DynamicIslandViewCoordinator: ObservableObject {
             resolvedDuration = duration
         }
         sneakPeekDuration = resolvedDuration
-        let bypassedTypes: [SneakContentType] = [.music, .timer, .reminder, .bluetoothAudio]
+        let bypassedTypes: [SneakContentType] = [.music, .timer, .reminder, .bluetoothAudio, .agentAttention]
         
         // Check if it's an extension type
         let isExtensionType: Bool

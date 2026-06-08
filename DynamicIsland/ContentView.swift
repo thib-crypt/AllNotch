@@ -662,6 +662,15 @@ struct ContentView: View {
                     }
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .allNotchOpenAgents)) { _ in
+                // An agent needs attention and the user opted into auto-opening
+                // the notch on the Agents tab.
+                guard Defaults[.enableAgentsFeature] else { return }
+                coordinator.currentView = .agents
+                if vm.notchState == .closed {
+                    openNotch()
+                }
+            }
             .onChange(of: coordinator.sneakPeek.show) { _, sneakPeekShowing in
                 // When sneak peek finishes, check if user is still hovering and open notch if needed
                 if !sneakPeekShowing {
@@ -915,7 +924,7 @@ struct ContentView: View {
                             styleOverride: batteryModel.activeTemporaryHUDKind.map { resolvedBatteryNotificationStyle(for: $0) }
                         )
                         .id(batteryModel.activeTemporaryHUDToken)
-                      } else if isSneakPeekVisibleOnCurrentScreen && Defaults[.inlineHUD] && (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && (coordinator.sneakPeek.type != .timer) && (coordinator.sneakPeek.type != .reminder) && !coordinator.sneakPeek.type.isExtensionPayload && ((coordinator.sneakPeek.type != .volume && coordinator.sneakPeek.type != .brightness && coordinator.sneakPeek.type != .backlight) || vm.notchState == .closed) {
+                      } else if isSneakPeekVisibleOnCurrentScreen && Defaults[.inlineHUD] && (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && (coordinator.sneakPeek.type != .timer) && (coordinator.sneakPeek.type != .reminder) && (coordinator.sneakPeek.type != .agentAttention) && !coordinator.sneakPeek.type.isExtensionPayload && ((coordinator.sneakPeek.type != .volume && coordinator.sneakPeek.type != .brightness && coordinator.sneakPeek.type != .backlight) || vm.notchState == .closed) {
                           InlineHUD(type: $coordinator.sneakPeek.type, value: $coordinator.sneakPeek.value, icon: $coordinator.sneakPeek.icon, hoverAnimation: $isHovering, gestureProgress: $gestureProgress)
                               .transition(
                                   coordinator.sneakPeek.type == .capsLock
@@ -974,7 +983,7 @@ struct ContentView: View {
                        }
                       
                       if isSneakPeekVisibleOnCurrentScreen {
-                          if (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && (coordinator.sneakPeek.type != .timer) && (coordinator.sneakPeek.type != .reminder) && (coordinator.sneakPeek.type != .capsLock) && !coordinator.sneakPeek.type.isExtensionPayload && !Defaults[.inlineHUD] && ((coordinator.sneakPeek.type != .volume && coordinator.sneakPeek.type != .brightness && coordinator.sneakPeek.type != .backlight) || vm.notchState == .closed) {
+                          if (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && (coordinator.sneakPeek.type != .timer) && (coordinator.sneakPeek.type != .reminder) && (coordinator.sneakPeek.type != .capsLock) && (coordinator.sneakPeek.type != .agentAttention) && !coordinator.sneakPeek.type.isExtensionPayload && !Defaults[.inlineHUD] && ((coordinator.sneakPeek.type != .volume && coordinator.sneakPeek.type != .brightness && coordinator.sneakPeek.type != .backlight) || vm.notchState == .closed) {
                               SystemEventIndicatorModifier(eventType: $coordinator.sneakPeek.type, value: $coordinator.sneakPeek.value, icon: $coordinator.sneakPeek.icon, sendEventBack: { _ in
                                   //
                               })
@@ -1021,6 +1030,27 @@ struct ContentView: View {
                                               textColor: reminderColor(for: reminder, now: reminderManager.currentDate),
                                               minDuration: 1,
                                               frameWidth: max(0, geo.size.width - 14)
+                                          )
+                                      }
+                                  }
+                                  .padding(.bottom, 10)
+                              }
+                          }
+                          // Agent attention sneak peek (Open Island bridge)
+                          else if coordinator.sneakPeek.type == .agentAttention {
+                              if !vm.hideOnClosed && activeSneakPeekStyle == .standard {
+                                  let accent = (coordinator.sneakPeek.accentColor ?? .orange)
+                                      .ensureMinimumBrightness(factor: 0.7)
+                                  GeometryReader { geo in
+                                      HStack(spacing: 6) {
+                                          Image(systemName: coordinator.sneakPeek.icon.isEmpty ? "cpu" : coordinator.sneakPeek.icon)
+                                              .font(.system(size: 11, weight: .semibold))
+                                              .foregroundStyle(accent)
+                                          MarqueeText(
+                                              .constant(agentSneakPeekText()),
+                                              textColor: accent,
+                                              minDuration: 1,
+                                              frameWidth: max(0, geo.size.width - 20)
                                           )
                                       }
                                   }
@@ -1085,6 +1115,8 @@ struct ContentView: View {
                                 NotchNotesView()
                             case .terminal:
                                 NotchTerminalView()
+                            case .agents:
+                                AgentsTabView()
                             case .extensionExperience:
                                 if let payload = currentExtensionTabPayload() {
                                     ExtensionNotchExperienceTabView(payload: payload)
@@ -1144,6 +1176,14 @@ struct ContentView: View {
 
         guard !subtitle.isEmpty else { return title }
         return "\(title) • \(subtitle)"
+    }
+
+    private func agentSneakPeekText() -> String {
+        let title = coordinator.sneakPeek.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let subtitle = coordinator.sneakPeek.subtitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let resolvedTitle = title.isEmpty ? "Agent" : title
+        guard !subtitle.isEmpty else { return resolvedTitle }
+        return "\(resolvedTitle) • \(subtitle)"
     }
 
     private let reminderTimeFormatter: DateFormatter = {

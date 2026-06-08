@@ -790,7 +790,7 @@ extension Defaults.Keys {
     static let menubarIcon = Key<Bool>("menubarIcon", default: true)
     static let showOnAllDisplays = Key<Bool>("showOnAllDisplays", default: false)
     static let automaticallySwitchDisplay = Key<Bool>("automaticallySwitchDisplay", default: true)
-    static let releaseName = Key<String>("releaseName", default: "Fiji")
+    static let releaseName = Key<String>("releaseName", default: "Notch Zero")
     static let hideDynamicIslandFromScreenCapture = Key<Bool>("hideDynamicIslandFromScreenCapture", default: false)
     
         // MARK: Behavior
@@ -1034,6 +1034,29 @@ extension Defaults.Keys {
     static let showBluetoothDeviceNameMarquee = Key<Bool>("showBluetoothDeviceNameMarquee", default: false)
     static let useBluetoothHUD3DIcon = Key<Bool>("useBluetoothHUD3DIcon", default: true)
     
+    // MARK: Agents Feature (Open Island bridge)
+    static let enableAgentsFeature = Key<Bool>("enableAgentsFeature", default: true)
+    /// Surface a sneak-peek and (optionally) open the notch when an agent needs attention.
+    static let agentNotificationsEnabled = Key<Bool>("agentNotificationsEnabled", default: true)
+    /// Play a system sound when an agent session needs approval or an answer.
+    static let agentSoundsEnabled = Key<Bool>("agentSoundsEnabled", default: true)
+    /// Name of the macOS system sound played on agent attention events.
+    static let agentSoundName = Key<String>("agentSoundName", default: "Submarine")
+    /// Automatically open the notch to the Agents tab when attention is needed.
+    /// Defaults on so a permission/question actually expands the notch for
+    /// inline approval, rather than only flashing a sneak-peek.
+    static let agentAutoOpenNotch = Key<Bool>("agentAutoOpenNotch", default: true)
+
+    // MARK: Screenshot Feature (macshot)
+    static let enableScreenshotFeature = Key<Bool>("enableScreenshotFeature", default: true)
+
+    // MARK: Todo Feature
+    static let enableTodoFeature = Key<Bool>("enableTodoFeature", default: true)
+    static let todoTasks = Key<[TodoTask]>("todoTasks", default: [])
+    static let todoAccentColor = Key<Color>("todoAccentColor", default: .blue)
+    static let todoHideCompleted = Key<Bool>("todoHideCompleted", default: false)
+    static let todoShowBadge = Key<Bool>("todoShowBadge", default: true)
+
     // MARK: Stats Feature
     static let enableStatsFeature = Key<Bool>("enableStatsFeature", default: false)
     static let autoStartStatsMonitoring = Key<Bool>("autoStartStatsMonitoring", default: true)
