@@ -1,12 +1,9 @@
-<p align="center">
-	<img src=".github/assets/atoll-logo.png" alt="Atoll logo" width="100">
-</p>
+# Contributing to AllNotch
 
-# Contributing to Atoll
-
-Thank you for your interest in contributing to Atoll! We welcome contributions from everyone—developers, designers, testers, and documentation writers. Please read the following guidelines to help us maintain a collaborative and high-quality project.
+Thank you for your interest in contributing to AllNotch! We welcome contributions from everyone — developers, designers, testers, and documentation writers.
 
 ## Table of Contents
+
 - [How to Contribute](#how-to-contribute)
 - [Code of Conduct](#code-of-conduct)
 - [Development Setup](#development-setup)
@@ -14,21 +11,18 @@ Thank you for your interest in contributing to Atoll! We welcome contributions f
 - [Coding Guidelines](#coding-guidelines)
 - [Design Contributions](#design-contributions)
 - [Documentation](#documentation)
-- [Code Review process](#code-review-process)
-- [Community & Support](#community--support)
-
 
 ---
 
 ## How to Contribute
 
 1. **Fork the repository** and clone your fork locally.
-2. **Create a feature branch** for your changes: `git switch -c feature/your-feature-name`
+2. **Create a feature branch**: `git switch -c feature/your-feature-name`
 3. **Make your changes** following the guidelines below.
-4. **Test your changes** to ensure they work as expected and do not break existing functionality.
+4. **Test your changes** — ensure they build and don't break existing functionality.
 5. **Commit** with clear, descriptive messages.
-6. **Push** to your fork and submit a **pull request** (PR) to the `main` branch.
-7. **Participate in code review** and address any feedback.
+6. **Push** to your fork and submit a **pull request** against `main`.
+7. **Participate in code review** and address feedback.
 
 ## Code of Conduct
 
@@ -36,38 +30,41 @@ We are committed to fostering a welcoming and inclusive environment. Please read
 
 ## Development Setup
 
-- **Requirements:**
-	- macOS Sonoma 14.0 or later
-	- Xcode 15.0+ with Swift 5.9 toolchain
-	- MacBook with a notch (for full feature testing)
-- **Clone the repo:**
-	```bash
-	git clone https://github.com/Ebullioscopic/Atoll.git
-	cd Atoll
-	open DynamicIsland.xcodeproj
-	```
-- **Build & Run:**
-	- Select your Mac as the run destination in Xcode.
-	- Build and run (Cmd+R).
-	- Grant any requested permissions.
+**Requirements:**
+- macOS 14.6 or later (macOS 15 recommended)
+- Xcode 15.0+ with Swift 5.9 toolchain
+- A MacBook with a notch (for full-feature testing)
+
+**Clone and build:**
+```bash
+git clone https://github.com/thib-crypt/AllNotch.git
+cd AllNotch
+open AllNotch.xcodeproj
+# Select your Mac as destination, then ⌘R
+```
+
+Swift Package dependencies resolve automatically on first build.
 
 ## Pull Request Process
 
-- Ensure your branch is up to date with `main` before submitting a PR.
+- Keep your branch up to date with `main` before submitting.
 - Provide a clear description of your changes and the motivation behind them.
-- Reference any related issues or discussions.
+- Reference any related issues.
 - Add screenshots or screen recordings for UI changes.
-- Ensure the code builds without errors or warnings.
-- Respond promptly to review feedback.
+- Ensure the project builds without errors.
+- Respond to review feedback promptly.
 
 ## Coding Guidelines
 
-- Follow Swift API Design Guidelines.
+- Follow [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/).
 - Use meaningful variable and function names.
 - Keep functions focused and concise.
 - Add inline documentation for public APIs and complex logic.
-- Write unit tests for new features where practical.
 - Avoid introducing unnecessary dependencies.
+
+## Plugin Architecture
+
+New features should be implemented as plugins when possible. Each plugin is a struct conforming to `NotchPlugin` registered in `allPlugins`. See the existing Screenshot plugin as a reference.
 
 ## Design Contributions
 
@@ -77,21 +74,10 @@ We are committed to fostering a welcoming and inclusive environment. Please read
 
 ## Documentation
 
-- Improve user guides, API docs, and troubleshooting sections.
-- Translate documentation into other languages.
-- Clarify setup instructions and add usage examples.
-
-## Code review process
-- All pull requests require review from project maintainers before merging.
-- Automated testing must pass via continuous integration workflows.
-- Changes should not significantly decrease test coverage without justification.
-- Breaking changes require major version updates following semantic versioning.
-
-## Community & Support
-
-- Join our [Discord community](https://discord.gg/zvjB4tJBkt) for discussion, support, and collaboration.
-- Be respectful and constructive in all interactions.
+- Improve user guides and setup instructions.
+- Clarify build steps and usage examples.
+- Keep the README and CONTRIBUTING in sync with the codebase.
 
 ---
 
-Thank you for helping make Atoll better!
+Thank you for helping make AllNotch better!
