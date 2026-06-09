@@ -41,14 +41,15 @@ struct WeatherTabView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "cloud.slash.fill")
                         .font(.system(size: 28))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.6))
                     Text("No weather data")
                         .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.6))
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .foregroundStyle(.white)
     }
 
     // MARK: - Current conditions
@@ -65,13 +66,13 @@ struct WeatherTabView: View {
 
                 Text(data.description)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.white.opacity(0.6))
                     .lineLimit(1)
 
                 if let loc = data.locationName, !loc.isEmpty {
                     Label(loc, systemImage: "location.fill")
                         .font(.system(size: 11))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.white.opacity(0.45))
                         .lineLimit(1)
                 }
             }
@@ -84,7 +85,7 @@ struct WeatherTabView: View {
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
                     Text("↓\(formatted(celsius: minC))")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.6))
                 }
             }
         }
@@ -108,7 +109,7 @@ struct WeatherTabView: View {
                 HStack(spacing: 8) {
                     Text(shortDayName(day.date))
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.6))
                         .frame(width: 32, alignment: .leading)
 
                     Image(systemName: day.symbolName)
@@ -132,7 +133,7 @@ struct WeatherTabView: View {
 
                     Text("↓\(formatted(celsius: day.lowTemperature))")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.6))
                         .frame(width: 36, alignment: .trailing)
                 }
             }
@@ -145,7 +146,7 @@ struct WeatherTabView: View {
                 VStack(spacing: 4) {
                     Text(shortHour(point.time))
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.6))
 
                     Image(systemName: point.symbolName)
                         .font(.system(size: 15, weight: .medium))
