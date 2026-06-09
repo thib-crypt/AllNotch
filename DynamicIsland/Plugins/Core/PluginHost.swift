@@ -37,6 +37,7 @@ final class PluginHost: ObservableObject {
         TodoPlugin(),
         ColorPickerPlugin(),
         AgentsPlugin(),
+        WeatherPlugin(),
         // … as more features migrate: TimerPlugin(), StatsPlugin() …
     ]
 
