@@ -22,42 +22,50 @@ import SwiftUI
 /// Replaces the former dedicated "Capture" tab — the actions live in the header
 /// alongside the other utility buttons so the notch stays a single surface.
 /// Styled to match the sibling header buttons (black capsule, white glyph).
+/// The screen-capture menu items, shared between the header button and the
+/// Apps-grid overflow tile so the actions stay defined in one place.
+struct ScreenCaptureMenuContent: View {
+    var body: some View {
+        Button {
+            MacshotManager.shared.startCapture(type: .area)
+        } label: {
+            Label("Capture Area", systemImage: "viewfinder.rectangular")
+        }
+
+        Button {
+            MacshotManager.shared.startCapture(type: .full)
+        } label: {
+            Label("Capture Full Screen", systemImage: "desktopcomputer")
+        }
+
+        Button {
+            MacshotManager.shared.startOCR()
+        } label: {
+            Label("Extract Text (OCR)", systemImage: "text.viewfinder")
+        }
+
+        Button {
+            MacshotManager.shared.startScrollCapture()
+        } label: {
+            Label("Scrolling Capture", systemImage: "scroll")
+        }
+
+        Divider()
+
+        Button {
+            HistoryOverlayController().show()
+        } label: {
+            Label("History", systemImage: "clock.arrow.2.circlepath")
+        }
+    }
+}
+
 struct ScreenCaptureMenuButton: View {
     private let size: CGFloat = 30
 
     var body: some View {
         Menu {
-            Button {
-                MacshotManager.shared.startCapture(type: .area)
-            } label: {
-                Label("Capture Area", systemImage: "viewfinder.rectangular")
-            }
-
-            Button {
-                MacshotManager.shared.startCapture(type: .full)
-            } label: {
-                Label("Capture Full Screen", systemImage: "desktopcomputer")
-            }
-
-            Button {
-                MacshotManager.shared.startOCR()
-            } label: {
-                Label("Extract Text (OCR)", systemImage: "text.viewfinder")
-            }
-
-            Button {
-                MacshotManager.shared.startScrollCapture()
-            } label: {
-                Label("Scrolling Capture", systemImage: "scroll")
-            }
-
-            Divider()
-
-            Button {
-                HistoryOverlayController().show()
-            } label: {
-                Label("History", systemImage: "clock.arrow.2.circlepath")
-            }
+            ScreenCaptureMenuContent()
         } label: {
             Capsule()
                 .fill(.black)

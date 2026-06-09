@@ -76,6 +76,19 @@ final class S3Uploader {
         upload(data: data, filename: url.lastPathComponent, contentType: contentType, completion: completion)
     }
 
+    // MARK: - Upload Arbitrary File
+
+    /// Uploads any file at `url`, inferring its MIME type from the file extension.
+    func uploadFile(url: URL, completion: @escaping (Result<String, Error>) -> Void) {
+        guard let data = try? Data(contentsOf: url) else {
+            completion(.failure(S3Error.fileReadFailed))
+            return
+        }
+        let contentType = UTType(filenameExtension: url.pathExtension)?.preferredMIMEType
+            ?? "application/octet-stream"
+        upload(data: data, filename: url.lastPathComponent, contentType: contentType, completion: completion)
+    }
+
     // MARK: - Core Upload
 
     func upload(data: Data, filename: String, contentType: String, completion: @escaping (Result<String, Error>) -> Void) {

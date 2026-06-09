@@ -33,10 +33,12 @@ struct CaptureSettingsView: View {
     @AppStorage("imgbbAPIKey") var imgbbAPIKey = ""
     @AppStorage("s3Endpoint") var s3Endpoint = ""
     @AppStorage("s3Bucket") var s3Bucket = ""
-    @AppStorage("s3AccessKey") var s3AccessKey = ""
-    @AppStorage("s3SecretKey") var s3SecretKey = ""
+    // Keys aligned with what `S3Uploader.config` reads so a single S3 config
+    // serves both macshot uploads and the shelf "Copy Cloud Link" action.
+    @AppStorage("s3AccessKeyID") var s3AccessKey = ""
+    @AppStorage("s3SecretAccessKey") var s3SecretKey = ""
     @AppStorage("s3Region") var s3Region = "us-east-1"
-    @AppStorage("s3PublicURL") var s3PublicURL = ""
+    @AppStorage("s3PublicURLBase") var s3PublicURL = ""
 
     @State private var showingS3Secret = false
 
