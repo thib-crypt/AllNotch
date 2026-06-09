@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/macOS-14.6%2B-blue?logo=apple&logoColor=white" alt="macOS 14.6+">
   <img src="https://img.shields.io/badge/Swift-5.9-FA7343?logo=swift&logoColor=white" alt="Swift 5.9">
   <img src="https://img.shields.io/badge/License-GPL%20v3-green" alt="GPL v3">
-  <img src="https://img.shields.io/badge/version-0.1%20Notch%20Zero-lightgrey" alt="v0.1 Notch Zero">
+  <img src="https://img.shields.io/badge/version-0.2-blue" alt="v0.2">
 </p>
 
 <p align="center">Your MacBook notch, elevated.</p>
@@ -21,15 +21,17 @@ The goal is simple: instead of running a dozen separate menu-bar utilities — o
 
 It runs as a lightweight menu-bar agent (no Dock icon), expands the notch into a tabbed surface on demand, and surfaces glanceable "sneak peeks" (volume, music, battery, agent attention…) when the notch is closed.
 
-> **v0.1 "Notch Zero"** — Active development. The full notch UI/UX shell and the Agents tab are working today. The Usage / Cost dashboard is being grafted on next.
+> **v0.2** — Active development. Now features an iPhone-style Apps launcher grid, advanced Shelf file-system actions, spacebar Quick Look previewing, and an integrated Weather plugin.
 
 ---
 
 ## What it does
 
+- **Apps launcher** — An iPhone-style grid view listing all active features, plugins, and extensions. Handles overflow destinations and quick actions automatically.
 - **Media** — Now-playing controls, artwork, and a live audio visualizer for Apple Music, Spotify, YouTube Music, and any app via Now Playing.
 - **System stats** — CPU, GPU, memory, disk, and network gauges with detailed timeline graphs and per-process breakdowns.
-- **Shelf** — A drag-and-drop staging area for files, with AirDrop / LocalSend sharing and Quick Look.
+- **Weather** — Current weather conditions and detailed daily/hourly forecasts powered by Open-Meteo or wttr.in, with reverse geocoding.
+- **Shelf** — A drag-and-drop staging area for files, with AirDrop / LocalSend sharing, Finder-style spacebar Quick Look, local copy/move actions, and direct S3-compatible cloud upload.
 - **Clipboard** — Searchable clipboard history.
 - **Timers & calendar** — Countdowns, lock-screen widgets, and upcoming calendar events.
 - **Agents** — Live AI coding-agent sessions (Claude Code, Codex, Cursor, Gemini, Kimi, OpenCode) right in the notch: see what each session is doing, and approve, deny, or answer prompts inline via hooks.
