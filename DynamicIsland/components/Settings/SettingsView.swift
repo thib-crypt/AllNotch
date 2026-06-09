@@ -47,6 +47,7 @@ private enum SettingsTabGroup: String, CaseIterable, Identifiable {
 
 private enum SettingsTab: String, CaseIterable, Identifiable {
     case general
+    case notchBar
     case liveActivities
     case appearance
     case lockScreen
@@ -72,7 +73,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     /// Which sidebar group this tab belongs to.
     var group: SettingsTabGroup {
         switch self {
-        case .general, .appearance:                                          return .core
+        case .general, .notchBar, .appearance:                               return .core
         case .media, .liveActivities, .lockScreen, .devices:                 return .mediaAndDisplay
         case .hudAndOSD, .battery:                                           return .system
         case .timer, .calendar, .notes:                                      return .productivity
@@ -87,6 +88,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .general: return String(localized: "General")
+        case .notchBar: return String(localized: "Notch Bar")
         case .liveActivities: return String(localized: "Live Activities")
         case .appearance: return String(localized: "Appearance")
         case .lockScreen: return String(localized: "Lock Screen")
@@ -112,6 +114,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     var systemImage: String {
         switch self {
         case .general: return "gear"
+        case .notchBar: return "menubar.rectangle"
         case .liveActivities: return "waveform.path.ecg"
         case .appearance: return "paintpalette"
         case .lockScreen: return "lock.laptopcomputer"
@@ -137,6 +140,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     var tint: Color {
         switch self {
         case .general: return .blue
+        case .notchBar: return .indigo
         case .liveActivities: return .pink
         case .appearance: return .purple
         case .lockScreen: return .orange
@@ -515,6 +519,7 @@ struct SettingsView: View {
         let ordered: [SettingsTab] = [
             // Core
             .general,
+            .notchBar,
             .appearance,
             // Media & Display
             .media,
@@ -996,6 +1001,10 @@ struct SettingsView: View {
         case .general:
             SettingsForm(tab: .general) {
                 GeneralSettings()
+            }
+        case .notchBar:
+            SettingsForm(tab: .notchBar) {
+                NotchBarSettings()
             }
         case .liveActivities:
             SettingsForm(tab: .liveActivities) {

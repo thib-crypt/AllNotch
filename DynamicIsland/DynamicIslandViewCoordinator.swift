@@ -112,7 +112,7 @@ class DynamicIslandViewCoordinator: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var hoverOpenSuppressedUntil: Date = .distantPast
     
-    private static let tabOrder: [NotchViews] = [.home, .shelf, .timer, .stats, .notes, .clipboard, .terminal, .extensionExperience]
+    private static let tabOrder: [NotchViews] = [.home, .shelf, .timer, .stats, .notes, .clipboard, .terminal, .extensionExperience, .apps]
 
     /// Unified ordering for both legacy tabs and plugin tabs. Plugin tabs are
     /// ordered after the legacy tabs, following the `PluginHost` registry order.

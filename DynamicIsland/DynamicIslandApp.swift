@@ -452,6 +452,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             // Plugin-provided tabs (e.g. Agents) may declare a preferred open-notch
             // height — honor it here so the real window matches the SwiftUI frame.
             baseSize.height = preferred
+        } else if coordinator.currentView == .apps {
+            // Grow the window so the Apps grid isn't clipped (it scrolls past the cap).
+            baseSize.height = NotchLauncherModel.shared.preferredGridHeight(
+                baseSize: baseSize,
+                coordinator: coordinator,
+                extensionManager: ExtensionNotchExperienceManager.shared
+            )
         }
 
         let adjustedContentSize = statsAdjustedNotchSize(

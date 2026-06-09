@@ -177,6 +177,15 @@ struct ContentView: View {
             return baseSize
         }
 
+        if coordinator.currentView == .apps {
+            let height = NotchLauncherModel.shared.preferredGridHeight(
+                baseSize: baseSize,
+                coordinator: coordinator,
+                extensionManager: ExtensionNotchExperienceManager.shared
+            )
+            return CGSize(width: baseSize.width, height: height)
+        }
+
         if enableMinimalisticUI,
            coordinator.currentView == .home,
            let preferredHeight = extensionMinimalisticPreferredHeight(baseSize: baseSize) {
@@ -1142,6 +1151,8 @@ struct ContentView: View {
                                 } else {
                                     NotchHomeView(albumArtNamespace: albumArtNamespace)
                                 }
+                            case .apps:
+                                AppsGridView()
                             case .plugin(let id):
                                 if let plugin = PluginHost.shared.tabPlugin(for: id) {
                                     plugin.makeTabView()

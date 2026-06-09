@@ -79,6 +79,9 @@ public enum NotchViews: Hashable {
     case clipboard
     case terminal
     case extensionExperience
+    /// iPhone-home-screen-style launcher grid listing every enabled destination
+    /// plus any overflowed quick actions. Always reachable via the Apps tab.
+    case apps
     /// Generic case for any migrated feature-plugin tab (e.g. Todo, Agents).
     /// The associated `PluginID` selects the concrete plugin via `PluginHost`.
     case plugin(PluginID)

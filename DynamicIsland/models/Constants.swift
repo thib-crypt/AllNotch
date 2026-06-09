@@ -823,6 +823,14 @@ extension Defaults.Keys {
     static let mirrorShape = Key<MirrorShapeEnum>("mirrorShape", default: MirrorShapeEnum.rectangle)
     static let selectedCameraID = Key<String>("selectedCameraID", default: "")
     static let settingsIconInNotch = Key<Bool>("settingsIconInNotch", default: true)
+    // MARK: Notch Bar (Apps launcher)
+    /// Order of favorite destinations pinned to the left navigation dock. Empty
+    /// ⇒ registry default order (rétro-compatible). Items that don't fit overflow
+    /// into the Apps grid.
+    static let notchFavoriteDestinations = Key<[String]>("notchFavoriteDestinations", default: [])
+    /// Order of the right-cluster quick actions. Empty ⇒ default order. Actions
+    /// that don't fit overflow into the Apps grid's "Quick Actions" section.
+    static let notchQuickActionsOrder = Key<[String]>("notchQuickActionsOrder", default: [])
     static let lightingEffect = Key<Bool>("lightingEffect", default: true)
     static let accentColor = Key<Color>("accentColor", default: Color.blue)
     static let enableShadow = Key<Bool>("enableShadow", default: true)
