@@ -42,4 +42,7 @@ extension PluginID {
 
     /// AI agents feature (notch tab + settings + bridge lifecycle).
     static let agents = PluginID("agents")
+
+    /// Weather conditions and forecast feature.
+    static let weather = PluginID("weather")
 }

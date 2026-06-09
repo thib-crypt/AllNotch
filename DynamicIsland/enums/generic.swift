@@ -332,3 +332,18 @@ enum LockScreenReminderChipStyle: String, CaseIterable, Defaults.Serializable, I
             }
         }
 }
+
+/// Controls whether the WeatherPlugin notch tab shows a 3-day daily forecast or 6-hour hourly forecast.
+enum WeatherForecastFormat: String, CaseIterable, Defaults.Serializable, Identifiable {
+    case daily  = "daily"
+    case hourly = "hourly"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .daily:  return String(localized: "3-Day")
+        case .hourly: return String(localized: "Hourly")
+        }
+    }
+}

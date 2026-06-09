@@ -894,6 +894,12 @@ extension Defaults.Keys {
     static let lockScreenWeatherAQIScale = Key<LockScreenWeatherAirQualityScale>("lockScreenWeatherAQIScale", default: .us)
     static let lockScreenWeatherUsesGaugeTint = Key<Bool>("lockScreenWeatherUsesGaugeTint", default: false)
     static let lockScreenWeatherProviderSource = Key<LockScreenWeatherProviderSource>("lockScreenWeatherProviderSource", default: .openMeteo)
+
+    // MARK: Weather Plugin
+    static let enableWeatherFeature    = Key<Bool>("enableWeatherFeature",    default: true)
+    static let weatherForecastFormat   = Key<WeatherForecastFormat>("weatherForecastFormat", default: .daily)
+    static let weatherSneakPeekEnabled = Key<Bool>("weatherSneakPeekEnabled", default: false)
+
     static let lockScreenWeatherVerticalOffset = Key<Double>("lockScreenWeatherVerticalOffset", default: 0)
     static let lockScreenMusicVerticalOffset = Key<Double>("lockScreenMusicVerticalOffset", default: 0)
     static let lockScreenMusicPanelWidth = Key<Double>("lockScreenMusicPanelWidth", default: 350)
