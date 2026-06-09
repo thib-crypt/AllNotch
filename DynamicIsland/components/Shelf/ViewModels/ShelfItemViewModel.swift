@@ -333,8 +333,31 @@ final class ShelfItemViewModel: ObservableObject {
         }
 
         menu.addItem(NSMenuItem.separator())
+
+        // Pinned quick-share providers (AirDrop, Messages, …), discovered at runtime.
+        // The full picker remains available via "Share…".
+        let pinnedProviders = Array(
+            QuickShareService.shared.availableProviders
+                .filter { $0.id != "System Share Menu" }
+                .prefix(4)
+        )
+        for provider in pinnedProviders {
+            let mi = NSMenuItem(title: provider.id, action: nil, keyEquivalent: "")
+            mi.representedObject = ShareProviderRef(id: provider.id)
+            if let data = provider.imageData, let img = NSImage(data: data) {
+                img.size = NSSize(width: 16, height: 16)
+                mi.image = img
+            }
+            menu.addItem(mi)
+        }
+
         addMenuItem(title: "Share…")
-        
+
+        // Upload file items to configured S3 storage and copy the public link.
+        if !selectedFileURLs.isEmpty {
+            addMenuItem(title: "Copy Cloud Link")
+        }
+
         // Add image processing options for image files grouped under "Image Actions"
         let imageURLs = selectedFileURLs.filter { ImageProcessingService.shared.isImageFile($0) }
         if !imageURLs.isEmpty {
@@ -380,6 +403,13 @@ final class ShelfItemViewModel: ObservableObject {
             copyPathItem.isAlternate = true
             copyPathItem.keyEquivalentModifierMask = [.option]
             menu.addItem(copyPathItem)
+        }
+
+        // Copy/Move the underlying file(s) to a chosen destination folder.
+        if !selectedFileURLs.isEmpty {
+            menu.addItem(NSMenuItem.separator())
+            addMenuItem(title: "Copy to…")
+            addMenuItem(title: "Move to…")
         }
 
         menu.addItem(NSMenuItem.separator())
@@ -432,6 +462,11 @@ final class ShelfItemViewModel: ObservableObject {
 
             if let marker = sender.representedObject as? String, marker == "__OTHER__" {
                 openWithPanel()
+                return
+            }
+
+            if let providerRef = sender.representedObject as? ShareProviderRef {
+                shareViaProvider(id: providerRef.id)
                 return
             }
 
@@ -492,6 +527,18 @@ final class ShelfItemViewModel: ObservableObject {
 
             case "Share…":
                 viewModel.shareItem(from: view)
+
+            case "Copy Cloud Link":
+                let selected = ShelfSelectionModel.shared.selectedItems(in: ShelfStateViewModel.shared.items)
+                ShelfFileActionsService.copyCloudLink(selected)
+
+            case "Copy to…":
+                let selected = ShelfSelectionModel.shared.selectedItems(in: ShelfStateViewModel.shared.items)
+                ShelfFileActionsService.copyOrMove(selected, move: false, relativeTo: view)
+
+            case "Move to…":
+                let selected = ShelfSelectionModel.shared.selectedItems(in: ShelfStateViewModel.shared.items)
+                ShelfFileActionsService.copyOrMove(selected, move: true, relativeTo: view)
 
             case "Rename":
                 let selected = ShelfSelectionModel.shared.selectedItems(in: ShelfStateViewModel.shared.items)
@@ -594,6 +641,31 @@ final class ShelfItemViewModel: ObservableObject {
                 
             default:
                 break
+            }
+        }
+
+        @MainActor
+        private func shareViaProvider(id: String) {
+            guard let provider = QuickShareService.shared.availableProviders.first(where: { $0.id == id }) else { return }
+            let selected = ShelfSelectionModel.shared.selectedItems(in: ShelfStateViewModel.shared.items)
+            let sharingView = view
+            Task {
+                var itemsToShare: [Any] = []
+                for itm in selected {
+                    switch itm.kind {
+                    case .file:
+                        if let url = ShelfStateViewModel.shared.resolveAndUpdateBookmark(for: itm) {
+                            itemsToShare.append(url)
+                        }
+                    case .text(let string):
+                        itemsToShare.append(string)
+                    case .link(let url):
+                        itemsToShare.append(url)
+                    }
+                }
+                guard !itemsToShare.isEmpty else { return }
+                // QuickShareService manages security-scoped access and notch lifecycle.
+                await QuickShareService.shared.shareFilesOrText(itemsToShare, using: provider, from: sharingView)
             }
         }
 
@@ -1112,6 +1184,13 @@ final class ShelfItemViewModel: ObservableObject {
         }
         return nil
     }
+}
+
+/// Lightweight wrapper used as an `NSMenuItem.representedObject` to identify a
+/// pinned quick-share provider (vs. an "Open With" app URL or the "Other…" marker).
+fileprivate final class ShareProviderRef: NSObject {
+    let id: String
+    init(id: String) { self.id = id }
 }
 
 fileprivate extension Sequence {

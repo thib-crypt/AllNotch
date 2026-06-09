@@ -37,6 +37,22 @@ final class QuickLookService: ObservableObject {
     private var dataSource: QuickLookDataSource?
     private var accessingURLs: [URL] = []
     private var previewPanelObserver: Any?
+    /// Whether we are currently holding the notch open for an active preview.
+    /// The Quick Look panel becomes key and would otherwise let the notch
+    /// auto-close (tearing down the shelf and dismissing the panel after ~0.5s).
+    private var holdingNotchOpen = false
+
+    private func beginHoldingNotchOpen() {
+        guard !holdingNotchOpen else { return }
+        holdingNotchOpen = true
+        SharingStateManager.shared.beginInteraction()
+    }
+
+    private func endHoldingNotchOpen() {
+        guard holdingNotchOpen else { return }
+        holdingNotchOpen = false
+        SharingStateManager.shared.endInteraction()
+    }
 
     func show(urls: [URL], selectFirst: Bool = true, slideshow: Bool = false) {
         guard !urls.isEmpty else { return }
@@ -49,6 +65,7 @@ final class QuickLookService: ObservableObject {
         }
         self.urls = accessingURLs
         self.isQuickLookOpen = true
+        beginHoldingNotchOpen()
         if selectFirst {
             self.selectedURL = accessingURLs.first
         }
@@ -63,6 +80,7 @@ final class QuickLookService: ObservableObject {
     }
 
     func hide() {
+        endHoldingNotchOpen()
         stopAccessingCurrentURLs()
         selectedURL = nil
         urls.removeAll()
@@ -104,6 +122,7 @@ extension QuickLookService {
         guard let panel = notification.object as? QLPreviewPanel, panel === previewPanel else { return }
         // Ensure cleanup happens on main actor
         Task { @MainActor in
+            endHoldingNotchOpen()
             stopAccessingCurrentURLs()
             selectedURL = nil
             urls.removeAll()
